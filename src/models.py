@@ -1,12 +1,12 @@
 from sqlalchemy import Column, Integer, String
-from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 
 class User(declarative_base()):
-    """
-    Модель пользователей.
-    """
+
+    """Модель пользователей."""
+
     __tablename__ = 'users'
 
     id = Column(String, primary_key=True, index=True)
