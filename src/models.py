@@ -4,9 +4,12 @@ from sqlalchemy.ext.declarative import declarative_base
 
 
 class User(declarative_base()):
+    """
+    Модель пользователей.
+    """
     __tablename__ = 'users'
 
-    id = Column(Integer, primary_key=True, index=True)
+    id = Column(String, primary_key=True, index=True)
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     phone = Column(String, nullable=True)
