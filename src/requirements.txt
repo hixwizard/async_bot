@@ -12,5 +12,3 @@ SQLAlchemy==2.0.11
 
 # PostgreSQL
 psycopg2-binary==2.9.5
-
-ruff==0.7.0
