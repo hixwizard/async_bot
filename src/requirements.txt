@@ -1,1 +1,13 @@
 # Основные зависимости здесь
+
+# Python-Telegram-Bot
+python-telegram-bot==21.1
+
+# Flask
+Flask==2.5.1
+
+# SQLAlchemy
+SQLAlchemy==2.0.11
+
+# PostgreSQL
+psycopg2-binary==2.9.5
