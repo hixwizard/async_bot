@@ -2,11 +2,11 @@ from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Enum,
     ForeignKey,
     Integer,
     String,
     func,
-    Enum,
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 
@@ -48,7 +48,7 @@ class User(Base):
     phone = Column(String, nullable=True)
     role = Column(
         Enum('user', 'admin', 'operator', name='role_enum'),
-        default='user'
+        default='user',
     )
     is_blocked = Column(Boolean, default=False)
     applications = relationship('Application', back_populates='user')
