@@ -15,3 +15,6 @@ psycopg2-binary==2.9.5
 
 # Alembic для миграций
 alembic==1.10.0
+
+# Начинаем прятать порты хосты и пр. в dotenv
+python-dotenv==0.19.0
