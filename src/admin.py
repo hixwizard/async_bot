@@ -6,7 +6,13 @@ from flask_admin.contrib.sqla import ModelView
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from .models import User
+from .models import (
+    Application,
+    ApplicationCheckStatus,
+    ApplicationStatus,
+    Question,
+    User,
+)
 
 app = Flask(__name__)
 
@@ -22,14 +28,15 @@ class UserAdminView(ModelView):
 
     """Панель администратора для модели пользователей."""
 
-    can_edit = True
-    can_delete = True
-    can_create = True
     column_filters = ['is_blocked']
 
 
 admin = Admin(app, name='Админ-зона', template_mode='bootstrap3')
 admin.add_view(UserAdminView(User, session))
+admin.add_view(ModelView(Application, session))
+admin.add_view(ModelView(ApplicationStatus, session))
+admin.add_view(ModelView(ApplicationCheckStatus, session))
+admin.add_view(ModelView(Question, session))
 
 
 if __name__ == '__main__':
