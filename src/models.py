@@ -1,9 +1,8 @@
-from enum import StrEnum
-
 from sqlalchemy import (
     Boolean,
     Column,
     DateTime,
+    Enum,
     ForeignKey,
     Integer,
     String,
@@ -19,22 +18,22 @@ class Base(DeclarativeBase):
     pass
 
 
-class UserRole(StrEnum):
+# class UserRole(StrEnum):
 
-    """Варианты ролей пользователей."""
+#     """Варианты ролей пользователей."""
 
-    USER = 'клиент'
-    ADMIN = 'администратор'
-    OPERATOR = 'оператор'
+#     USER = 'клиент'
+#     ADMIN = 'администратор'
+#     OPERATOR = 'оператор'
 
 
-class Status(StrEnum):
+# class Status(StrEnum):
 
-    """Варианты статусов заявки."""
+#     """Варианты статусов заявки."""
 
-    OPEN = 'открыта'
-    IN_WORK = 'в работе'
-    CLOSE = 'закрыта'
+#     OPEN = 'открыта'
+#     IN_WORK = 'в работе'
+#     CLOSE = 'закрыта'
 
 
 class User(Base):
@@ -47,7 +46,10 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=True)
     phone = Column(String, nullable=True)
-    role = Column(UserRole, default='клиент')
+    role = Column(
+        Enum('user', 'admin', 'operator', name='role_enum'),
+        default='user',
+    )
     is_blocked = Column(Boolean, default=False)
     applications = relationship('Application', back_populates='user')
 
@@ -79,7 +81,10 @@ class ApplicationStatus(Base):
     __tablename__ = 'statuses'
 
     id = Column(Integer, primary_key=True)
-    status = Column(Status, default='открыта', nullable=False)
+    status = Column(
+        Enum('открыта', 'в работе', 'закрыта', name='status_enum'),
+        nullable=False,
+    )
     applications = relationship('Application', back_populates='status')
 
 
