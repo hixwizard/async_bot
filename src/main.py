@@ -21,24 +21,18 @@ async def get_questions()-> Response:
         )
 
 
-async def start(update: Update, context: CallbackContext)-> None:
+async def start(update: Update, context: CallbackContext) -> None:
     """Отправляет приветственное сообщение и первый вопрос."""
-    # Получаем список вопросов из базы данных
     questions = await get_questions()
 
     await update.message.reply_text(
         'Добро пожаловать! Мы начнем с нескольких вопросов.',
     )
 
-    # Отправляем первый вопрос, если он есть
-    if questions:
-        await update.message.reply_text(
-            questions[0]['question'])  # Отправляем первый вопрос
+    await update.message.reply_text(questions[0]['question'])
 
-        context.user_data['questions'] = questions
-        context.user_data['current_question'] = 0
-    else:
-        await update.message.reply_text('Вопросов пока нет в базе данных.')
+    context.user_data['questions'] = questions
+    context.user_data['current_question'] = 0
 
 
 async def process_application(update: Update, context: CallbackContext)-> None:
@@ -51,9 +45,7 @@ async def process_application(update: Update, context: CallbackContext)-> None:
 
     # Уведомляем пользователя о получении ответа
     await update.message.reply_text(
-        f'Спасибо за ваш ответ, {user.first_name}. '
-        'Мы продолжаем с следующими вопросами.',
-    )
+        f'{user.name}, ваш ответ принят')
 
     # Получаем текущий индекс вопроса
     current_question_index = context.user_data.get('current_question', 0)
@@ -70,7 +62,7 @@ async def process_application(update: Update, context: CallbackContext)-> None:
         )
     else:
         await update.message.reply_text(
-            f'Спасибо за ваши ответы, {user.first_name}. '
+            f'Спасибо за ваши ответы, {user.name}. '
             'Мы начали обработку вашей заявки.',
         )
 
@@ -78,7 +70,7 @@ async def process_application(update: Update, context: CallbackContext)-> None:
             application = Application(
                 user_id=user.id,
                 status_id=1,
-                questions=context.user_data['answers'],
+                answers="; ".join(context.user_data['answers']),
             )
             session.add(application)
             await session.commit()
