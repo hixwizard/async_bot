@@ -1,32 +1,33 @@
+from database import get_async_db_session
+from flask import Response, jsonify
+from sqlalchemy.future import select
 from telegram import Update
 from telegram.ext import CallbackContext
-from sqlalchemy.future import select
-from database import get_async_db_session
-from models import Question, Application
-from flask import jsonify
+
+from models import Application, Question
+
+ADMIN_CHAT_ID = '123'
 
 
-async def get_questions():
-    """ json в качестве списка вопросов """
-
+async def get_questions()-> Response:
+    """Json в качестве списка вопросов."""
     async with get_async_db_session() as session:
         result = await session.execute(
-            select(Question).order_by(Question.number)
+            select(Question).order_by(Question.number),
         )
         questions = result.scalars().all()
         return jsonify(
-            [{'number': q.number, 'question': q.question} for q in questions]
+            [{'number': q.number, 'question': q.question} for q in questions],
         )
 
 
-async def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: CallbackContext)-> None:
     """Отправляет приветственное сообщение и первый вопрос."""
-
     # Получаем список вопросов из базы данных
     questions = await get_questions()
 
     await update.message.reply_text(
-        'Добро пожаловать! Мы начнем с нескольких вопросов.'
+        'Добро пожаловать! Мы начнем с нескольких вопросов.',
     )
 
     # Отправляем первый вопрос, если он есть
@@ -40,9 +41,8 @@ async def start(update: Update, context: CallbackContext):
         await update.message.reply_text('Вопросов пока нет в базе данных.')
 
 
-async def process_application(update: Update, context: CallbackContext):
+async def process_application(update: Update, context: CallbackContext)-> None:
     """Обрабатывает ответы пользователя и отправляет следующий вопрос."""
-
     user = update.message.from_user
     # Сохраняем ответ пользователя в контексте
     if 'answers' not in context.user_data:
@@ -52,7 +52,7 @@ async def process_application(update: Update, context: CallbackContext):
     # Уведомляем пользователя о получении ответа
     await update.message.reply_text(
         f'Спасибо за ваш ответ, {user.first_name}. '
-        'Мы продолжаем с следующими вопросами.'
+        'Мы продолжаем с следующими вопросами.',
     )
 
     # Получаем текущий индекс вопроса
@@ -66,24 +66,24 @@ async def process_application(update: Update, context: CallbackContext):
     # Если есть следующий вопрос, отправляем его
     if next_question_index < len(questions):
         await update.message.reply_text(
-            questions[next_question_index]['question']
+            questions[next_question_index]['question'],
         )
     else:
         await update.message.reply_text(
             f'Спасибо за ваши ответы, {user.first_name}. '
-            'Мы начали обработку вашей заявки.'
+            'Мы начали обработку вашей заявки.',
         )
 
         async with get_async_db_session() as session:
             application = Application(
                 user_id=user.id,
                 status_id=1,
-                questions=context.user_data['answers']
+                questions=context.user_data['answers'],
             )
             session.add(application)
             await session.commit()
 
         # Отправляем уведомление админу
         await context.bot.send_message(
-            chat_id=ADMIN_CHAT_ID, text="Новая заявка получена"
+            chat_id=ADMIN_CHAT_ID, text="Новая заявка получена",
         )
