@@ -15,7 +15,7 @@ from models import (
 )
 
 app = Flask(__name__)
-
+app.secret_key = os.getenv('SECRET_FLASK', 'mysecretkey')
 # Получаем URL базы данных из переменной окружения
 DB_URL = os.getenv(
     'DATABASE_URL', 'postgresql://user:password@localhost:5432/mydatabase',
