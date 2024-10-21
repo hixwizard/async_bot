@@ -5,9 +5,9 @@ Revises:
 Create Date: 2024-10-20 12:40:14.178934
 
 """
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = '01'
@@ -22,12 +22,12 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('number', sa.Integer(), nullable=False),
     sa.Column('question', sa.String(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
     )
     op.create_table('statuses',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('status', sa.Enum('открыта', 'в работе', 'закрыта', name='status_enum'), nullable=False),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
     )
     op.create_table('users',
     sa.Column('id', sa.String(), nullable=False),
@@ -37,7 +37,7 @@ def upgrade() -> None:
     sa.Column('role', sa.Enum('user', 'admin', 'operator', name='role_enum'), nullable=True),
     sa.Column('is_blocked', sa.Boolean(), nullable=True),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
+    sa.UniqueConstraint('email'),
     )
     op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     op.create_table('applications',
@@ -47,7 +47,7 @@ def upgrade() -> None:
     sa.Column('answers', sa.String(), nullable=False),
     sa.ForeignKeyConstraint(['status_id'], ['statuses.id'], name='fk_applications_status_id_statuses'),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], name='fk_applications_user_id_users'),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
     )
     op.create_table('check_status',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -57,8 +57,8 @@ def upgrade() -> None:
     sa.Column('new_status', sa.String(), nullable=False),
     sa.Column('timestamp', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['application_id'], ['applications.id'], name='fk_check_status_application_id_applications'),
-    sa.ForeignKeyConstraint(['modified_by'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.ForeignKeyConstraint(['modified_by'], ['users.id'] ),
+    sa.PrimaryKeyConstraint('id'),
     )
     # ### end Alembic commands ###
 

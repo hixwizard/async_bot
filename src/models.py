@@ -8,32 +8,9 @@ from sqlalchemy import (
     String,
     func,
 )
-from sqlalchemy.orm import DeclarativeBase, relationship
+from sqlalchemy.orm import declarative_base, relationship
 
-
-class Base(DeclarativeBase):
-
-    """Базовый класс для моделей."""
-
-    pass
-
-
-# class UserRole(StrEnum):
-
-#     """Варианты ролей пользователей."""
-
-#     USER = 'клиент'
-#     ADMIN = 'администратор'
-#     OPERATOR = 'оператор'
-
-
-# class Status(StrEnum):
-
-#     """Варианты статусов заявки."""
-
-#     OPEN = 'открыта'
-#     IN_WORK = 'в работе'
-#     CLOSE = 'закрыта'
+Base = declarative_base()
 
 
 class User(Base):
@@ -51,6 +28,7 @@ class User(Base):
         default='user',
     )
     is_blocked = Column(Boolean, default=False)
+
     applications = relationship('Application', back_populates='user')
 
 
@@ -73,6 +51,9 @@ class Application(Base):
     )
     answers = Column(String, nullable=False)  # Ответы клиента на вопросы
 
+    user = relationship('User', back_populates='applications')
+    status = relationship('ApplicationStatus', back_populates='applications')
+
 
 class ApplicationStatus(Base):
 
@@ -85,6 +66,7 @@ class ApplicationStatus(Base):
         Enum('открыта', 'в работе', 'закрыта', name='status_enum'),
         nullable=False,
     )
+
     applications = relationship('Application', back_populates='status')
 
 
@@ -93,6 +75,7 @@ class ApplicationCheckStatus(Base):
     """Модель логов изменений статусов заявок."""
 
     __tablename__ = 'check_status'
+
     id = Column(Integer, primary_key=True)
     application_id = Column(
         Integer,

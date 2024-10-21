@@ -3,10 +3,10 @@ import os
 from flask import Flask
 from flask_admin import Admin
 from flask_admin.contrib.sqla import ModelView
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from flask_migrate import Migrate
+from flask_sqlalchemy import SQLAlchemy
 
-from .models import (
+from models import (
     Application,
     ApplicationCheckStatus,
     ApplicationStatus,
@@ -16,12 +16,16 @@ from .models import (
 
 app = Flask(__name__)
 
+# Получаем URL базы данных из переменной окружения
 DB_URL = os.getenv(
     'DATABASE_URL', 'postgresql://user:password@localhost:5432/mydatabase',
 )
-engine = create_engine(DB_URL, echo=True)
-Session = sessionmaker(bind=engine)
-session = Session()
+app.config['SQLALCHEMY_DATABASE_URI'] = DB_URL
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Создание объектов SQLAlchemy и Migrate
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 
 class UserAdminView(ModelView):
@@ -32,12 +36,11 @@ class UserAdminView(ModelView):
 
 
 admin = Admin(app, name='Админ-зона', template_mode='bootstrap3')
-admin.add_view(UserAdminView(User, session))
-admin.add_view(ModelView(Application, session))
-admin.add_view(ModelView(ApplicationStatus, session))
-admin.add_view(ModelView(ApplicationCheckStatus, session))
-admin.add_view(ModelView(Question, session))
-
+admin.add_view(UserAdminView(User, db.session))
+admin.add_view(ModelView(Application, db.session))
+admin.add_view(ModelView(ApplicationStatus, db.session))
+admin.add_view(ModelView(ApplicationCheckStatus, db.session))
+admin.add_view(ModelView(Question, db.session))
 
 if __name__ == '__main__':
     app.run()
