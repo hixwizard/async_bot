@@ -1,6 +1,7 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from typing import AsyncIterator, List
 
 from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -44,13 +45,13 @@ async_session_factory = sessionmaker(
 
 
 @asynccontextmanager
-async def get_async_db_session():
+async def get_async_db_session() -> AsyncIterator[AsyncSession]:
     """Создание асинхронной сессии базы данных."""
     async with async_session_factory() as session:
         yield session
 
 
-async def get_questions() -> list:
+async def get_questions() -> List[dict]:
     """Получение вопросов из базы данных в виде списка словарей."""
     async with get_async_db_session() as session:
         result = await session.execute(
@@ -159,7 +160,7 @@ async def error_handler(update: Update, context: CallbackContext):
     logger.error(f"Update {update} caused error {context.error}")
 
 
-def init_bot():
+def init_bot() -> TelegramApplication:
     """Инициализация Telegram бота."""
     application = TelegramApplication.builder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
