@@ -155,7 +155,7 @@ async def process_application(
         )
 
 
-async def error_handler(update: Update, context: CallbackContext):
+async def error_handler(update: Update, context: CallbackContext) -> None:
     """Логирование ошибок, возникших во время обработки обновлений."""
     logger.error(f"Update {update} caused error {context.error}")
 
