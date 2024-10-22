@@ -40,7 +40,7 @@ docker compose up
 docker compose up -d
 ```
 
-Обновить и поднять сеть после изменений:
+Обновить и поднять сеть после ваших локальных изменений в коде:
 ```shell
 docker compose up --build
 ```
