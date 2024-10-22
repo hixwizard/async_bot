@@ -27,25 +27,4 @@ ruff check --fix
 ```shell
 pre-commit install
 ```
-## Cписок команд для настройки и запуска Alembic миграций и Docker контейнеров:
-
-Создаем начальные настройки Alembic и структуру для миграций:
-```shell
-docker-compose run web alembic init migrations
-```
-Эта команда создаст миграцию на основе текущих моделей (из файла models.py):
-```shell
-docker-compose run web alembic revision --autogenerate -m "Initial migration"
-```
-Применяем созданные миграции к базе данных.
-Можно запускать вручную или включить в docker-compose.yml для автоматического запуска:
-```shell
-docker-compose run alembic upgrade head
-```
-Запускаем приложение и базу данных PostgreSQL.
-Это команда для стандартного запуска контейнеров (с пересборкой образов):
-```shell
-docker-compose up --build
-```
-Теперь контейнеры с PostgreSQL и Flask будут запущены,
-а миграции будут автоматически применяться при помощи сервиса Alembic.
+## Запуск docker-compose 
