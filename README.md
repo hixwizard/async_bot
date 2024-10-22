@@ -31,7 +31,7 @@ pre-commit install
 ### Админ-зона: 127.0.0.1:5000/admin
 ### Бот заработает, если указать BOT_TOKEN в .env
 
-
+Запуск в терминале с логами
 ```shell
 docker compose up
 ```
