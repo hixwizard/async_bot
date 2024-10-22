@@ -4,12 +4,12 @@ import logging
 from logging.config import fileConfig
 from typing import List, Union  # Для типов revision и directives
 
-from flask import current_app
-
 from alembic import context
 from alembic.runtime.migration import (
     MigrationContext,  # Для аннотации типа context
 )
+from flask import current_app
+
 from models import Base
 
 config = context.config
