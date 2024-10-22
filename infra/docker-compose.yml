@@ -9,6 +9,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - mynetwork
 
   flask-admin:
     build:
@@ -21,6 +23,8 @@ services:
       - SECRET_FLASK=${SECRET_FLASK}
     depends_on:
       - db
+    networks:
+      - mynetwork
     ports:
       - "5000:5000"
     command: >
@@ -36,8 +40,14 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
     depends_on:
       - db
+    networks:
+      - mynetwork
     command: >
       bash -c "python main.py"
+
+networks:
+  mynetwork:
+    driver: bridge
 
 volumes:
   postgres_data:
