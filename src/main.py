@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
-from telegram import ReplyKeyboardMarkup, Update
+from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.ext import Application as TelegramApplication
 from telegram.ext import (
     CallbackContext,
@@ -18,7 +18,6 @@ from telegram.ext import (
 
 from models import Application, Question, User
 
-# Загрузка переменных окружения из .env файла
 load_dotenv()
 
 
@@ -26,17 +25,17 @@ ADMIN_CHAT_ID = '123'  # стоит убрать и отправлять соо�
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 DATABASE_URL = os.getenv('DATABASE_ASYNC_URL')
 
-# Настройка логирования
+
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
 
-# Создание асинхронного движка базы данных
+
 engine = create_async_engine(DATABASE_URL, echo=True)
 
-# Создание фабрики сессий
+
 async_session_factory = sessionmaker(
     bind=engine,
     class_=AsyncSession,
@@ -72,7 +71,6 @@ async def save_user_to_db(
         user = result.scalars().first()
 
         if not user:
-            # Если пользователя нет, создаем новую запись
             new_user = User(
                 id=user_id, name=first_name, email=None,
                 phone=None, role='user', is_blocked=False,
@@ -86,15 +84,10 @@ async def save_user_to_db(
 
 async def start(update: Update, context: CallbackContext) -> None:
     """Отправка сообщения и сохранение информации о пользователе."""
-    # Извлечение информации о пользователе из обновления
     user_id = str(update.message.from_user.id)
     first_name = update.message.from_user.first_name
     username = update.message.from_user.username
-
-    # Сохранение пользователя в базу данных
     await save_user_to_db(user_id, first_name, username)
-
-    # Отправка приветственного сообщения
     keyboard = [['Начать']]
     reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
     await update.message.reply_text(
@@ -122,37 +115,124 @@ async def process_application(
         update: Update, context: CallbackContext,
 ) -> None:
     """Обработка ответов пользователя и отправка следующего вопроса."""
-    user = update.message.from_user
+    user_id = str(update.message.from_user.id)
     if 'answers' not in context.user_data:
         context.user_data['answers'] = []
     context.user_data['answers'].append(update.message.text)
-    await update.message.reply_text(f'{user.first_name}, ваш ответ принят.')
-
+    await update.message.reply_text(
+        f'{update.message.from_user.first_name}, ваш ответ принят.',
+    )
     current_question_index = context.user_data.get('current_question', 0)
     questions = context.user_data.get('questions', [])
     context.user_data['current_question'] = current_question_index + 1
     next_question_index = context.user_data['current_question']
-
     if next_question_index < len(questions):
         await update.message.reply_text(
             questions[next_question_index]['question'],
         )
     else:
         await update.message.reply_text(
-            f'Спасибо за ваши ответы, {user.first_name}.'
-            'Мы начали обработку вашей заявки.',
+            'Спасибо за ответы. '
+            'Как с вами удобнее связаться, по электронной почте или телефону:',
         )
+        context.user_data['awaiting_contact'] = True
         async with get_async_db_session() as session:
             application = Application(
-                user_id=user.id, status_id=1,
+                user_id=user_id,
+                status_id=1,
                 answers="; ".join(context.user_data['answers']),
             )
             session.add(application)
             await session.commit()
         await context.bot.send_message(
             chat_id=ADMIN_CHAT_ID,
-            text='Новая заявка получена',
+            text=f'Получена новая заявка от пользователя '
+            f'{update.message.from_user.first_name}'
         )
+
+
+async def handle_contact_info(
+        update: Update, context: CallbackContext
+) -> None:
+    """Обработка контактной информации пользователя."""
+    user_id = str(update.message.from_user.id)
+    if update.message.contact:
+        contact_info = update.message.contact.phone_number
+    else:
+        contact_info = update.message.text
+    logger.info(
+        'Получена контактная информация:'
+        f'{update.message.from_user.first_name}: {contact_info}',
+    )
+
+    async with get_async_db_session() as session:
+        result = await session.execute(select(User).filter_by(id=user_id))
+        user_record = result.scalars().first()
+
+        if user_record:
+            # Проверка, является ли введенная информация электронной почтой
+            if "@" in contact_info:
+                user_record.email = contact_info
+            else:
+                user_record.phone = contact_info
+            await session.commit()
+            await update.message.reply_text(
+                'Спасибо! Ваша контактная информация сохранена.',
+            )
+            context.user_data['awaiting_contact'] = False
+        else:
+            logger.warning(
+                f'Пользователь с ID {user_id} не найден для обновления.'
+            )
+            await update.message.reply_text(
+                'Ошибка при сохранении контактной информации.'
+            )
+
+
+async def request_contact(update: Update, context: CallbackContext) -> None:
+    """Запросить у пользователя его контактный номер телефона."""
+    keyboard = [[
+        KeyboardButton("Поделиться номером", request_contact=True),
+    ], [
+        KeyboardButton("Введите ваш email"),
+    ]]
+    reply_markup = ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
+    await update.message.reply_text(
+        'Пожалуйста, поделитесь своим номером телефона или введите ваш email:',
+        reply_markup=reply_markup,
+    )
+
+
+async def handle_question_response(
+        update: Update, context: CallbackContext,
+) -> None:
+    """Обработка ответов пользователя на вопросы."""
+    if context.user_data.get('awaiting_contact', False):
+        await handle_contact_info(update, context)
+        return
+    user = update.message.from_user
+    answer = update.message.text
+    logger.info(f"Ответ пользователя {user.first_name}: {answer}")
+    if 'current_question' in context.user_data:
+        question_index = context.user_data['current_question']
+        questions = context.user_data['questions']
+        if question_index < len(questions):
+            await process_application(update, context)
+        else:
+            await update.message.reply_text(
+                'Все вопросы завершены. Спасибо за участие!',
+            )
+    else:
+        await update.message.reply_text(
+            'Нажмите "Начать", чтобы начать опрос.',
+        )
+
+
+async def handle_message(update: Update, context: CallbackContext) -> None:
+    """Обработка произвольных сообщений от пользователей."""
+    message = update.message.text
+    logger.info(f"Получено сообщение: {message}")
+    await update.message.reply_text("Ваше сообщение получено!")
 
 
 async def error_handler(update: Update, context: CallbackContext) -> None:
@@ -165,12 +245,13 @@ def init_bot() -> TelegramApplication:
     application = TelegramApplication.builder().token(BOT_TOKEN).build()
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(
-        filters.Regex('^Начать$'), handle_start_button),
-    )
-    application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, process_application),
-    )
-    application.add_error_handler(error_handler)  # Обработчик ошибок
+        filters.Regex('^Начать$'), handle_start_button,
+    ))
+    application.add_handler(MessageHandler(
+        filters.TEXT & ~filters.COMMAND, handle_question_response,
+    ))
+    application.add_handler(MessageHandler(filters.ALL, handle_message))
+    application.add_error_handler(error_handler)
     return application
 
 

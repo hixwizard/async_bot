@@ -1,4 +1,5 @@
 services:
+  name: trunin
   db:
     image: postgres:15
     environment:
@@ -12,7 +13,7 @@ services:
     networks:
       - mynetwork
 
-  flask-admin:
+  administraion_web:
     build:
       context: ../
       dockerfile: infra/Dockerfile
