@@ -147,12 +147,12 @@ async def process_application(
         await context.bot.send_message(
             chat_id=ADMIN_CHAT_ID,
             text=f'Получена новая заявка от пользователя '
-            f'{update.message.from_user.first_name}'
+            f'{update.message.from_user.first_name}',
         )
 
 
 async def handle_contact_info(
-        update: Update, context: CallbackContext
+        update: Update, context: CallbackContext,
 ) -> None:
     """Обработка контактной информации пользователя."""
     user_id = str(update.message.from_user.id)
@@ -182,10 +182,10 @@ async def handle_contact_info(
             context.user_data['awaiting_contact'] = False
         else:
             logger.warning(
-                f'Пользователь с ID {user_id} не найден для обновления.'
+                f'Пользователь с ID {user_id} не найден для обновления.',
             )
             await update.message.reply_text(
-                'Ошибка при сохранении контактной информации.'
+                'Ошибка при сохранении контактной информации.',
             )
 
 
