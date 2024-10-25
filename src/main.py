@@ -16,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 
-from models import Application, Question, User
+from models import Application, ApplicationStatus, Question, User
 
 load_dotenv()
 
@@ -126,29 +126,42 @@ async def process_application(
     questions = context.user_data.get('questions', [])
     context.user_data['current_question'] = current_question_index + 1
     next_question_index = context.user_data['current_question']
+
     if next_question_index < len(questions):
         await update.message.reply_text(
             questions[next_question_index]['question'],
         )
     else:
         await update.message.reply_text(
-            'Спасибо за ответы. '
-            'Как с вами удобнее связаться, по электронной почте или телефону:',
+            'Спасибо за ответы. Как с вами удобнее связаться, '
+            'по электронной почте или телефону:',
         )
         context.user_data['awaiting_contact'] = True
+
         async with get_async_db_session() as session:
+            # Попытка получить статус "открыта" из базы
+            result = await session.execute(
+                select(ApplicationStatus).filter_by(status='открыта'),
+            )
+            status = result.scalars().first()
+
+            # Если статус не найден, создаем его
+            if not status:
+                status = ApplicationStatus(status='открыта')
+                session.add(status)
+                await session.commit()
+
             application = Application(
                 user_id=user_id,
-                status_id=1,
+                status_id=status.id,
                 answers="; ".join(context.user_data['answers']),
             )
             session.add(application)
             await session.commit()
-        await context.bot.send_message(
-            chat_id=ADMIN_CHAT_ID,
-            text=f'Получена новая заявка от пользователя '
-            f'{update.message.from_user.first_name}',
-        )
+
+            logger.info(f'Заявка от пользователя '
+                        f'{update.message.from_user.first_name} со статусом '
+                        f'"{status.status}" сохранена.')
 
 
 async def handle_contact_info(
