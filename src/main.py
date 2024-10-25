@@ -16,7 +16,7 @@ from telegram.ext import (
     filters,
 )
 
-from models import Application, Question, User, ApplicationStatus
+from models import Application, ApplicationStatus, Question, User
 
 load_dotenv()
 
@@ -133,14 +133,15 @@ async def process_application(
         )
     else:
         await update.message.reply_text(
-            'Спасибо за ответы. Как с вами удобнее связаться, по электронной почте или телефону:',
+            'Спасибо за ответы. Как с вами удобнее связаться, '
+            'по электронной почте или телефону:',
         )
         context.user_data['awaiting_contact'] = True
 
         async with get_async_db_session() as session:
             # Попытка получить статус "открыта" из базы
             result = await session.execute(
-                select(ApplicationStatus).filter_by(status='открыта')
+                select(ApplicationStatus).filter_by(status='открыта'),
             )
             status = result.scalars().first()
 
@@ -158,8 +159,9 @@ async def process_application(
             session.add(application)
             await session.commit()
 
-            logger.info(f'Заявка от пользователя {update.message.from_user.first_name} со статусом "{status.status}" сохранена.')
-
+            logger.info(f'Заявка от пользователя '
+                        f'{update.message.from_user.first_name} со статусом '
+                        f'"{status.status}" сохранена.')
 
 
 async def handle_contact_info(
