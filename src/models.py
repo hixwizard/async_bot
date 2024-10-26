@@ -13,23 +13,31 @@ from sqlalchemy.orm import declarative_base, relationship
 Base = declarative_base()
 
 
+class AdminUser(Base):
+
+    """Модель администратора."""
+
+    __tablename__ = 'admin_users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False, unique=True)
+    password = Column(String, nullable=False)
+    role = Column(
+        Enum('admin', 'operator', name='admin_role_enum'),
+        default='admin',
+    )
+
+
 class User(Base):
+
     """Модель пользователя."""
 
     __tablename__ = 'users'
 
     id = Column(String, primary_key=True, nullable=False)  # ID из Telegram
     name = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=True)
-    phone = Column(String, nullable=True)
-    role = Column(
-        Enum('user', 'admin', 'operator', name='role_enum'),
-        default='user',
-    )
-    operator_comments = relationship(
-        'ApplicationComment',
-        back_populates='operator',
-    )
+    email = Column(String, unique=True)
+    phone = Column(String)
     is_blocked = Column(Boolean, default=False)
 
     applications = relationship('Application', back_populates='user')
@@ -39,22 +47,26 @@ class User(Base):
 
 
 class Application(Base):
+
     """Модель заявок клиента."""
 
     __tablename__ = 'applications'
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True)
     user_id = Column(
         String,
         ForeignKey('users.id', name='fk_applications_user_id_users'),
         nullable=False,
     )
-    status_id = Column(
-        Integer,
-        ForeignKey('statuses.id', name='fk_applications_status_id_statuses'),
+    status = Column(
+        Enum('открыта', 'в работе', 'закрыта', name='status_enum'),
         nullable=False,
     )
     answers = Column(String, nullable=False)  # Ответы клиента на вопросы
+    operator_comments = relationship(
+        'ApplicationComment',
+        back_populates='operator',
+    )
     comments = relationship('ApplicationComment', back_populates='application')
 
     user = relationship('User', back_populates='applications')
@@ -69,6 +81,7 @@ class Application(Base):
 
 
 class ApplicationStatus(Base):
+
     """Модель статусов заявки."""
 
     __tablename__ = 'statuses'
@@ -86,6 +99,7 @@ class ApplicationStatus(Base):
 
 
 class ApplicationCheckStatus(Base):
+
     """Модель логов изменений статусов заявок."""
 
     __tablename__ = 'check_status'
@@ -105,6 +119,7 @@ class ApplicationCheckStatus(Base):
 
 
 class ApplicationComment(Base):
+
     """Модель комментариев оператора к заявке."""
 
     __tablename__ = 'application_comments'
@@ -134,6 +149,7 @@ class ApplicationComment(Base):
 
 
 class Question(Base):
+
     """Модель вопросов."""
 
     __tablename__ = 'questions'
