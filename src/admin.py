@@ -13,7 +13,6 @@ from models import (
     Application,
     ApplicationCheckStatus,
     ApplicationComment,
-    ApplicationStatus,
     Question,
     User,
 )
@@ -35,7 +34,7 @@ migrate = Migrate(app, db)
 @click.argument('password')
 def create_superuser(username: str, password: str) -> None:
     """Создание суперпользователя."""
-    if AdminUser.query.filter_by(username=username).first():
+    if db.session.query(AdminUser).filter_by(username=username).first():
         click.echo(f'Суперпользователь {username} уже существует в БД')
         return
     superuser = AdminUser(username=username, password=password)
@@ -57,7 +56,6 @@ admin.add_view(ModelView(AdminUser, db.session))
 admin.add_view(ModelView(Application, db.session))
 admin.add_view(ModelView(ApplicationCheckStatus, db.session))
 admin.add_view(ModelView(ApplicationComment, db.session))
-admin.add_view(ModelView(ApplicationStatus, db.session))
 admin.add_view(ModelView(Question, db.session))
 
 

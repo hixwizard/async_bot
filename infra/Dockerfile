@@ -9,10 +9,7 @@ COPY ./src /app
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Применение миграций Alembic, копирование исправленного env.py и запуск Flask
-CMD ["bash", "-c", "\
-    flask db init && \
-    cp /app/src/migrations/env.py /app/migrations/env.py && \
-    flask db migrate -m 'initial migration' && \
-    flask db upgrade && \
-    flask run --host=127.0.0.1"]
+RUN chmod +x /app/init_db.sh
+
+# Run the script to handle migrations and start Flask
+CMD ["bash", "/app/init_db.sh"]
