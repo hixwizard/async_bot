@@ -1,5 +1,4 @@
 services:
-  name: trunin
   db:
     image: postgres:15
     environment:
