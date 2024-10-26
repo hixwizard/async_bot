@@ -23,13 +23,25 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=True)
     phone = Column(String, nullable=True)
-    role = Column(
-        Enum('user', 'admin', 'operator', name='role_enum'),
-        default='user',
-    )
     is_blocked = Column(Boolean, default=False)
 
     applications = relationship('Application', back_populates='user')
+
+
+class AdminUser(Base):
+
+    """Модель администратора."""
+
+    __tablename__ = 'admin_users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False, unique=True)
+    password = Column(String, nullable=False)
+    role = Column(
+        Enum('admin', 'operator', name='admin_role_enum'),
+        default='admin',
+        nullable=False,
+    )
 
 
 class Application(Base):
@@ -44,30 +56,13 @@ class Application(Base):
         ForeignKey('users.id', name='fk_applications_user_id_users'),
         nullable=False,
     )
-    status_id = Column(
-        Integer,
-        ForeignKey('statuses.id', name='fk_applications_status_id_statuses'),
+    status = Column(
+        Enum('открыта', 'в работе', 'закрыта', name='status_enum'),
         nullable=False,
     )
     answers = Column(String, nullable=False)  # Ответы клиента на вопросы
 
     user = relationship('User', back_populates='applications')
-    status = relationship('ApplicationStatus', back_populates='applications')
-
-
-class ApplicationStatus(Base):
-
-    """Модель статусов заявки."""
-
-    __tablename__ = 'statuses'
-
-    id = Column(Integer, primary_key=True)
-    status = Column(
-        Enum('открыта', 'в работе', 'закрыта', name='status_enum'),
-        nullable=False,
-    )
-
-    applications = relationship('Application', back_populates='status')
 
 
 class ApplicationCheckStatus(Base):
