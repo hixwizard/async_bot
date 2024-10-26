@@ -7,16 +7,23 @@ from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.future import select
 from sqlalchemy.orm import sessionmaker
-from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
+from telegram import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+    Update,
+)
 from telegram.ext import Application as TelegramApplication
 from telegram.ext import (
     CallbackContext,
+    CallbackQueryHandler,
     CommandHandler,
     MessageHandler,
     filters,
 )
 
-from models import Application, Question, User
+from models import Application, ApplicationStatus, Question, User
 
 load_dotenv()
 
@@ -119,36 +126,51 @@ async def process_application(
     if 'answers' not in context.user_data:
         context.user_data['answers'] = []
     context.user_data['answers'].append(update.message.text)
+
     await update.message.reply_text(
         f'{update.message.from_user.first_name}, ваш ответ принят.',
     )
+
     current_question_index = context.user_data.get('current_question', 0)
     questions = context.user_data.get('questions', [])
     context.user_data['current_question'] = current_question_index + 1
-    next_question_index = context.user_data['current_question']
-    if next_question_index < len(questions):
+
+    if context.user_data['current_question'] < len(questions):
         await update.message.reply_text(
-            questions[next_question_index]['question'],
+            questions[context.user_data['current_question']]['question'],
         )
     else:
+        # Завершение опроса и запрос контактной информации
         await update.message.reply_text(
-            'Спасибо за ответы. '
-            'Как с вами удобнее связаться, по электронной почте или телефону:',
+            'Спасибо за ответы. Как с вами удобнее связаться, '
+            'по электронной почте или телефону:',
         )
-        context.user_data['awaiting_contact'] = True
+        context.user_data['awaiting_contact'] = True  # Флаг ожидания контакта
+
+        # Сохранение заявки в базе данных
         async with get_async_db_session() as session:
+            result = await session.execute(
+                select(ApplicationStatus).filter_by(status='открыта'),
+            )
+            status = result.scalars().first() or ApplicationStatus(
+                status='открыта')
+            if not status.id:
+                session.add(status)
+                await session.commit()
+
             application = Application(
                 user_id=user_id,
-                status_id=1,
+                status_id=status.id,
                 answers="; ".join(context.user_data['answers']),
             )
             session.add(application)
             await session.commit()
-        await context.bot.send_message(
-            chat_id=ADMIN_CHAT_ID,
-            text=f'Получена новая заявка от пользователя '
-            f'{update.message.from_user.first_name}',
-        )
+
+            logger.info(
+                f'Заявка от пользователя '
+                f'{update.message.from_user.first_name} '
+                f'со статусом "{status.status}" сохранена.',
+            )
 
 
 async def handle_contact_info(
@@ -156,37 +178,49 @@ async def handle_contact_info(
 ) -> None:
     """Обработка контактной информации пользователя."""
     user_id = str(update.message.from_user.id)
-    if update.message.contact:
-        contact_info = update.message.contact.phone_number
-    else:
-        contact_info = update.message.text
-    logger.info(
-        'Получена контактная информация:'
-        f'{update.message.from_user.first_name}: {contact_info}',
-    )
+    contact_info = update.message.contact.phone_number if (
+        update.message.contact) else update.message.text
 
     async with get_async_db_session() as session:
         result = await session.execute(select(User).filter_by(id=user_id))
         user_record = result.scalars().first()
 
         if user_record:
-            # Проверка, является ли введенная информация электронной почтой
             if "@" in contact_info:
                 user_record.email = contact_info
             else:
                 user_record.phone = contact_info
             await session.commit()
-            await update.message.reply_text(
-                'Спасибо! Ваша контактная информация сохранена.',
-            )
+
             context.user_data['awaiting_contact'] = False
-        else:
-            logger.warning(
-                f'Пользователь с ID {user_id} не найден для обновления.',
-            )
-            await update.message.reply_text(
-                'Ошибка при сохранении контактной информации.',
-            )
+
+            # Сброс данных для нового опроса
+            context.user_data['answers'] = []
+            context.user_data['current_question'] = 0
+
+    keyboard = [[InlineKeyboardButton("Да", callback_data="start_survey")]]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+    await update.message.reply_text(
+        'Спасибо! Ваша контактная информация сохранена.\n'
+        'Хотите начать новый опрос? Нажмите "Да" для подтверждения.',
+        reply_markup=reply_markup,
+    )
+
+
+async def start_new_survey(update: Update, context: CallbackContext) -> None:
+    """Функция для начала нового опроса после нажатия кнопки."""
+    query = update.callback_query
+    await query.answer()
+
+    # Сброс ответов и параметров для нового опроса
+    context.user_data['answers'] = []
+    context.user_data['current_question'] = 0
+
+    # Начинаем с первого вопроса
+    questions = context.user_data.get('questions', [])
+    if questions:
+        await query.message.reply_text(questions[0]['question'])
 
 
 async def request_contact(update: Update, context: CallbackContext) -> None:
@@ -243,14 +277,19 @@ async def error_handler(update: Update, context: CallbackContext) -> None:
 def init_bot() -> TelegramApplication:
     """Инициализация Telegram бота."""
     application = TelegramApplication.builder().token(BOT_TOKEN).build()
+
+    # Регистрация обработчиков
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(
-        filters.Regex('^Начать$'), handle_start_button,
-    ))
-    application.add_handler(MessageHandler(
-        filters.TEXT & ~filters.COMMAND, handle_question_response,
-    ))
+    application.add_handler(
+        MessageHandler(filters.Regex('^Начать$'), handle_start_button))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,
+                                           handle_question_response))
     application.add_handler(MessageHandler(filters.ALL, handle_message))
+
+    # Регистрация обработчика callback'а
+    application.add_handler(
+        CallbackQueryHandler(start_new_survey, pattern="start_survey"))
+
     application.add_error_handler(error_handler)
     return application
 
