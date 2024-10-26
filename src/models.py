@@ -28,7 +28,7 @@ class AdminUser(Base):
     )
     operator_comments = relationship(
         'ApplicationComment',
-        back_populates='operator'
+        back_populates='operator',
     )
 
 
@@ -66,7 +66,7 @@ class Application(Base):
         Integer,
         ForeignKey(
             'statuses.id',
-            name='fk_applications_status_id_statuses'
+            name='fk_applications_status_id_statuses',
         ),
         nullable=False,
     )
