@@ -14,7 +14,6 @@ Base = declarative_base()
 
 
 class User(Base):
-
     """Модель пользователя."""
 
     __tablename__ = 'users'
@@ -31,14 +30,16 @@ class User(Base):
 
     applications = relationship('Application', back_populates='user')
 
+    def __repr__(self):
+        return f"{self.name}"
+
 
 class Application(Base):
-
     """Модель заявок клиента."""
 
     __tablename__ = 'applications'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(
         String,
         ForeignKey('users.id', name='fk_applications_user_id_users'),
@@ -54,9 +55,14 @@ class Application(Base):
     user = relationship('User', back_populates='applications')
     status = relationship('ApplicationStatus', back_populates='applications')
 
+    def __repr__(self):
+        # Отображаем имя пользователя и статус вместо объектов
+        user_name = self.user.name if self.user else 'Unknown User'
+        status_text = self.status.status if self.status else 'Unknown Status'
+        return f"Application(user='{user_name}', status='{status_text}', answers='{self.answers}')"
+
 
 class ApplicationStatus(Base):
-
     """Модель статусов заявки."""
 
     __tablename__ = 'statuses'
@@ -69,9 +75,11 @@ class ApplicationStatus(Base):
 
     applications = relationship('Application', back_populates='status')
 
+    def __repr__(self):
+        return f"{self.status}"
+
 
 class ApplicationCheckStatus(Base):
-
     """Модель логов изменений статусов заявок."""
 
     __tablename__ = 'check_status'
@@ -85,14 +93,12 @@ class ApplicationCheckStatus(Base):
         ),
         nullable=False,
     )
-    modified_by = Column(String, ForeignKey('users.id'))  # Кто изменил
     old_status = Column(String, nullable=False)
     new_status = Column(String, nullable=False)
     timestamp = Column(DateTime, default=func.now())
 
 
 class Question(Base):
-
     """Модель вопросов."""
 
     __tablename__ = 'questions'
