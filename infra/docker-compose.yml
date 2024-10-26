@@ -27,8 +27,6 @@ services:
       - mynetwork
     ports:
       - "5000:5000"
-    command: >
-      bash -c "flask run --host=0.0.0.0"
 
   telegram-bot:
     build:

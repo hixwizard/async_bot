@@ -26,6 +26,10 @@ class AdminUser(Base):
         Enum('admin', 'operator', name='admin_role_enum'),
         default='admin',
     )
+    operator_comments = relationship(
+        'ApplicationComment',
+        back_populates='operator',
+    )
 
 
 class User(Base):
@@ -58,19 +62,19 @@ class Application(Base):
         ForeignKey('users.id', name='fk_applications_user_id_users'),
         nullable=False,
     )
-    status = Column(
-        Enum('открыта', 'в работе', 'закрыта', name='status_enum'),
+    status_id = Column(
+        Integer,
+        ForeignKey(
+            'statuses.id',
+            name='fk_applications_status_id_statuses',
+        ),
         nullable=False,
     )
     answers = Column(String, nullable=False)  # Ответы клиента на вопросы
-    operator_comments = relationship(
-        'ApplicationComment',
-        back_populates='operator',
-    )
-    comments = relationship('ApplicationComment', back_populates='application')
 
     user = relationship('User', back_populates='applications')
     status = relationship('ApplicationStatus', back_populates='applications')
+    comments = relationship('ApplicationComment', back_populates='application')
 
     def __repr__(self) -> str:
         # Отображаем имя пользователя и статус вместо объектов
@@ -129,15 +133,15 @@ class ApplicationComment(Base):
         Integer,
         ForeignKey(
             'applications.id',
-            name='fk_application_comments_application_id',
+            name='fk_application_comments_application_id_applications',
         ),
         nullable=False,
     )
     operator_id = Column(
-        String,
+        Integer,
         ForeignKey(
-            'users.id',
-            name='fk_application_comments_operator_id',
+            'admin_users.id',
+            name='fk_application_comments_operator_id_admin_users',
         ),
         nullable=False,
     )  # ID оператора, который оставил комментарий
@@ -145,7 +149,7 @@ class ApplicationComment(Base):
     timestamp = Column(DateTime, default=func.now())  # Время создания
 
     application = relationship('Application', back_populates='comments')
-    operator = relationship('User', back_populates='operator_comments')
+    operator = relationship('AdminUser', back_populates='operator_comments')
 
 
 class Question(Base):
