@@ -14,6 +14,7 @@ Base = declarative_base()
 
 
 class User(Base):
+
     """Модель пользователя."""
 
     __tablename__ = 'users'
@@ -30,11 +31,12 @@ class User(Base):
 
     applications = relationship('Application', back_populates='user')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.name}"
 
 
 class Application(Base):
+
     """Модель заявок клиента."""
 
     __tablename__ = 'applications'
@@ -55,14 +57,16 @@ class Application(Base):
     user = relationship('User', back_populates='applications')
     status = relationship('ApplicationStatus', back_populates='applications')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         # Отображаем имя пользователя и статус вместо объектов
         user_name = self.user.name if self.user else 'Unknown User'
         status_text = self.status.status if self.status else 'Unknown Status'
-        return f"Application(user='{user_name}', status='{status_text}', answers='{self.answers}')"
+        return (f"Application(user='{user_name}', status='{status_text}', "
+                f"answers='{self.answers}')")
 
 
 class ApplicationStatus(Base):
+
     """Модель статусов заявки."""
 
     __tablename__ = 'statuses'
@@ -75,11 +79,12 @@ class ApplicationStatus(Base):
 
     applications = relationship('Application', back_populates='status')
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.status}"
 
 
 class ApplicationCheckStatus(Base):
+
     """Модель логов изменений статусов заявок."""
 
     __tablename__ = 'check_status'
@@ -99,6 +104,7 @@ class ApplicationCheckStatus(Base):
 
 
 class Question(Base):
+
     """Модель вопросов."""
 
     __tablename__ = 'questions'
