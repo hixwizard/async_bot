@@ -12,6 +12,8 @@ from models import (
     AdminUser,
     Application,
     ApplicationCheckStatus,
+    ApplicationComment,
+    ApplicationStatus,
     Question,
     User,
 )
@@ -54,6 +56,8 @@ admin.add_view(UserAdminView(User, db.session))
 admin.add_view(ModelView(AdminUser, db.session))
 admin.add_view(ModelView(Application, db.session))
 admin.add_view(ModelView(ApplicationCheckStatus, db.session))
+admin.add_view(ModelView(ApplicationComment, db.session))
+admin.add_view(ModelView(ApplicationStatus, db.session))
 admin.add_view(ModelView(Question, db.session))
 
 
