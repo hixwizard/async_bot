@@ -224,7 +224,7 @@ async def start_new_survey(update: Update, context: CallbackContext) -> None:
 
 
 async def request_contact(update: Update, context: CallbackContext) -> None:
-    """Запросить у пользователя его контактный номер телефона."""
+    """Запросить у пользователя его контакт."""
     keyboard = [[
         KeyboardButton("Поделиться номером", request_contact=True),
     ], [
@@ -285,8 +285,6 @@ def init_bot() -> TelegramApplication:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,
                                            handle_question_response))
     application.add_handler(MessageHandler(filters.ALL, handle_message))
-
-    # Регистрация обработчика callback'а
     application.add_handler(
         CallbackQueryHandler(start_new_survey, pattern="start_survey"))
 
