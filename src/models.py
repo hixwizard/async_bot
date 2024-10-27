@@ -13,6 +13,25 @@ from sqlalchemy.orm import declarative_base, relationship
 Base = declarative_base()
 
 
+class AdminUser(Base):
+
+    """Модель администратора."""
+
+    __tablename__ = 'admin_users'
+
+    id = Column(Integer, primary_key=True)
+    username = Column(String, nullable=False, unique=True)
+    password = Column(String, nullable=False)
+    role = Column(
+        Enum('admin', 'operator', name='admin_role_enum'),
+        default='admin',
+    )
+    operator_comments = relationship(
+        'ApplicationComment',
+        back_populates='operator',
+    )
+
+
 class User(Base):
 
     """Модель пользователя."""
@@ -21,15 +40,14 @@ class User(Base):
 
     id = Column(String, primary_key=True, nullable=False)  # ID из Telegram
     name = Column(String, nullable=False)
-    email = Column(String, unique=True, nullable=True)
-    phone = Column(String, nullable=True)
-    role = Column(
-        Enum('user', 'admin', 'operator', name='role_enum'),
-        default='user',
-    )
+    email = Column(String, unique=True)
+    phone = Column(String)
     is_blocked = Column(Boolean, default=False)
 
     applications = relationship('Application', back_populates='user')
+
+    def __repr__(self) -> str:
+        return f"{self.name}"
 
 
 class Application(Base):
@@ -46,13 +64,24 @@ class Application(Base):
     )
     status_id = Column(
         Integer,
-        ForeignKey('statuses.id', name='fk_applications_status_id_statuses'),
+        ForeignKey(
+            'statuses.id',
+            name='fk_applications_status_id_statuses',
+        ),
         nullable=False,
     )
     answers = Column(String, nullable=False)  # Ответы клиента на вопросы
 
     user = relationship('User', back_populates='applications')
     status = relationship('ApplicationStatus', back_populates='applications')
+    comments = relationship('ApplicationComment', back_populates='application')
+
+    def __repr__(self) -> str:
+        # Отображаем имя пользователя и статус вместо объектов
+        user_name = self.user.name if self.user else 'Unknown User'
+        status_text = self.status.status if self.status else 'Unknown Status'
+        return (f"Application(user='{user_name}', status='{status_text}', "
+                f"answers='{self.answers}')")
 
 
 class ApplicationStatus(Base):
@@ -68,6 +97,9 @@ class ApplicationStatus(Base):
     )
 
     applications = relationship('Application', back_populates='status')
+
+    def __repr__(self) -> str:
+        return f"{self.status}"
 
 
 class ApplicationCheckStatus(Base):
@@ -85,10 +117,39 @@ class ApplicationCheckStatus(Base):
         ),
         nullable=False,
     )
-    modified_by = Column(String, ForeignKey('users.id'))  # Кто изменил
     old_status = Column(String, nullable=False)
     new_status = Column(String, nullable=False)
     timestamp = Column(DateTime, default=func.now())
+
+
+class ApplicationComment(Base):
+
+    """Модель комментариев оператора к заявке."""
+
+    __tablename__ = 'application_comments'
+
+    id = Column(Integer, primary_key=True)
+    application_id = Column(
+        Integer,
+        ForeignKey(
+            'applications.id',
+            name='fk_application_comments_application_id_applications',
+        ),
+        nullable=False,
+    )
+    operator_id = Column(
+        Integer,
+        ForeignKey(
+            'admin_users.id',
+            name='fk_application_comments_operator_id_admin_users',
+        ),
+        nullable=False,
+    )  # ID оператора, который оставил комментарий
+    comment = Column(String, nullable=True)  # Может быть пустым
+    timestamp = Column(DateTime, default=func.now())  # Время создания
+
+    application = relationship('Application', back_populates='comments')
+    operator = relationship('AdminUser', back_populates='operator_comments')
 
 
 class Question(Base):
