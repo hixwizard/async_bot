@@ -80,7 +80,7 @@ async def save_user_to_db(
         if not user:
             new_user = User(
                 id=user_id, name=first_name, email=None,
-                phone=None, role='user', is_blocked=False,
+                phone=None, is_blocked=False,
             )
             session.add(new_user)
             await session.commit()
