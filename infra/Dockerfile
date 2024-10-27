@@ -7,10 +7,12 @@ WORKDIR /app
 # Копируем весь код в контейнер
 COPY ./src /app
 
+# Устанавливаем зависимости
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Run the script to handle migrations and start Flask
-CMD ["bash", "-c", "\
-    flask db migrate -m 'initial migration' && \
-    flask db upgrade && \
-    flask run --host=0.0.0.0"]
+# Копируем скрипт для инициализации миграций
+COPY ./src/init_db.sh /app/init_db.sh
+RUN chmod +x /app/init_db.sh
+
+# Устанавливаем команду по умолчанию
+CMD ["/app/init_db.sh"]

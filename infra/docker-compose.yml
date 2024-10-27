@@ -11,9 +11,8 @@ services:
       - "5432:5432"
     networks:
       - mynetwork
-    restart: always
 
-  administraion_web:
+  admin:
     build:
       context: ../
       dockerfile: infra/Dockerfile
@@ -24,7 +23,6 @@ services:
       - SECRET_FLASK=${SECRET_FLASK}
     depends_on:
       - db
-    restart: always
     networks:
       - mynetwork
     ports:
@@ -40,9 +38,11 @@ services:
       - BOT_TOKEN=${BOT_TOKEN}
     depends_on:
       - db
-    restart: always
+      - admin
     networks:
       - mynetwork
+    command: >
+      bash -c "python main.py"
 
 networks:
   mynetwork:
