@@ -20,7 +20,7 @@ class AdminUser(Base):
     __tablename__ = 'admin_users'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String, nullable=False, unique=True)
+    login = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False)
     role = Column(
         Enum('admin', 'operator', name='admin_role_enum'),
@@ -30,6 +30,25 @@ class AdminUser(Base):
         'ApplicationComment',
         back_populates='operator',
     )
+
+    @property
+    def is_authenticated(self) -> bool:
+        """Определяет параметр 'is_authenticated'."""
+        return True
+
+    @property
+    def is_active(self) -> bool:
+        """Определяет параметр 'is_active'."""
+        return True
+
+    @property
+    def is_anonymous(self) -> bool:
+        """Определяет параметр 'is_anonymous'."""
+        return False
+
+    def get_id(self) -> int:
+        """Получает id пользователя."""
+        return self.id
 
 
 class User(Base):
