@@ -1,0 +1,38 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+{{ super() }}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6 offset-md-3" style="margin-top: 20px;">
+            {% if current_user.is_authenticated %}
+            <h2>Добро пожаловать!</h2>
+            <p>Выберите нужную вкладку в меню навигации</p>
+            {% else %}
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="text-center mb-4">Авторизация</h3>
+                    <form method="POST" action="">
+                        {{ form.hidden_tag() if form.hidden_tag }}
+                        {% for f in form if f.type != 'CSRFTokenField' %}
+                        <div class="form-group">
+                            {{ f.label }}<br>
+                            {{ f }}
+                            {% if f.errors %}
+                            <ul>
+                                {% for e in f.errors %}
+                                <li>{{ e }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        <button class="btn btn-primary" type="submit">Войти</button>
+                    </form>
+                    {{ link | safe }}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock body %}
