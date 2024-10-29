@@ -7,8 +7,8 @@ from telegram import (
 
 
 def start_keyboard() -> ReplyKeyboardMarkup:
-    """Создает кнопку для начала опроса."""
-    keyboard = [['Начать']]
+    """Возвращает клавиатуру с кнопками 'Создать заявку' и 'Мои заявки'."""
+    keyboard = [['Создать заявку', 'Мои заявки']]
     return ReplyKeyboardMarkup(keyboard, one_time_keyboard=True)
 
 

@@ -1,10 +1,11 @@
 import logging
 
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from buttons import contact_keyboard, request_contact_keyboard, start_keyboard
+from buttons import request_contact_keyboard, start_keyboard
 from config import logger
 from database import get_async_db_session
 from models import Application, ApplicationStatus, Question, User
@@ -41,30 +42,30 @@ async def save_user_to_db(
 
 
 async def start(update: Update, context: CallbackContext) -> None:
-    """Отправка сообщения и сохранение информации о пользователе."""
+    """Отправка приветственного сообщения и сохранение пользователя."""
     user_id = str(update.message.from_user.id)
     first_name = update.message.from_user.first_name
     username = update.message.from_user.username
     await save_user_to_db(user_id, first_name, username)
     reply_markup = start_keyboard()
     await update.message.reply_text(
-        'Добро пожаловать! Нажмите "Начать", чтобы начать опрос.',
-        reply_markup=reply_markup)
+        'Добро пожаловать! Выберите нужное действие:',
+        reply_markup=reply_markup,
+    )
 
 
 async def handle_start_button(
         update: Update, context: CallbackContext,
 ) -> None:
-    """Обработка нажатия кнопки 'Начать' и запуск первого вопроса."""
-    if not context.user_data.get('started', False):
-        questions = await get_questions()
-        if questions:
-            await update.message.reply_text(questions[0]['question'])
-            context.user_data['questions'] = questions
-            context.user_data['current_question'] = 0
-            context.user_data['started'] = True
+    """Обработка нажатия кнопки 'Создать заявку' и запуск первого вопроса."""
+    questions = await get_questions()
+    if questions:
+        await update.message.reply_text(questions[0]['question'])
+        context.user_data['questions'] = questions
+        context.user_data['current_question'] = 0
+        context.user_data['started'] = True
     else:
-        await update.message.reply_text('Опрос уже начат!')
+        await update.message.reply_text('Вопросы для опроса отсутствуют.')
 
 
 async def process_application(
@@ -89,12 +90,11 @@ async def process_application(
             questions[context.user_data['current_question']]['question'],
         )
     else:
-        # Завершение опроса и запрос контактной информации
         await update.message.reply_text(
-            'Спасибо за ответы. Как с вами удобнее связаться, '
+            'Как с вами удобнее связаться, '
             'по электронной почте или телефону:',
         )
-        context.user_data['awaiting_contact'] = True  # Флаг ожидания контакта
+        context.user_data['awaiting_contact'] = True
 
         # Сохранение заявки в базе данных
         async with get_async_db_session() as session:
@@ -140,16 +140,16 @@ async def handle_contact_info(
                 user_record.phone = contact_info
             await session.commit()
 
+            # Сброс данных
             context.user_data['awaiting_contact'] = False
-
             context.user_data['answers'] = []
             context.user_data['current_question'] = 0
 
-    reply_markup = contact_keyboard()
+    reply_markup = start_keyboard()
 
     await update.message.reply_text(
         'Спасибо! Ваша контактная информация сохранена.\n'
-        'Хотите начать новый опрос? Нажмите "Да" для подтверждения.',
+        'Вы можете создать новую заявку или просмотреть свои заявки.',
         reply_markup=reply_markup,
     )
 
@@ -213,3 +213,29 @@ async def handle_message(update: Update, context: CallbackContext) -> None:
 async def error_handler(update: Update, context: CallbackContext) -> None:
     """Обрабатывает ошибки, возникающие при обработке обновлений Telegram."""
     logging.error(f"Update {update} caused error {context.error}")
+
+
+async def handle_my_applications(update: Update,
+                                 context: CallbackContext) -> None:
+    """Обрабатывает запрос на просмотр заявок пользователя."""
+    user_id = str(update.message.from_user.id)
+    applications_text = "Ваши заявки:\n"
+
+    async with get_async_db_session() as session:
+        # Получаем все заявки пользователя с загруженными статусами
+        result = await session.execute(
+            select(Application)
+            .filter_by(user_id=user_id)
+            .options(selectinload(Application.status)),
+        )
+        applications = result.scalars().all()
+
+        if not applications:
+            await update.message.reply_text("У вас нет заявок.")
+            return
+
+        for index, app in enumerate(applications, start=1):
+            applications_text += (f"Номер: {index}. "
+                                  f"Статус: {app.status.status}.\n")
+
+        await update.message.reply_text(applications_text)
