@@ -2,9 +2,10 @@ from __future__ import with_statement
 
 import logging
 from logging.config import fileConfig
+from typing import Any, Dict, List
 
-from flask import current_app
 from alembic import context
+from flask import current_app
 
 # Импортируем Base и метаданные
 from models import Base  # Импортируем ваш Base из models
@@ -22,24 +23,30 @@ target_metadata = Base.metadata  # Установите target_metadata для �
 # Устанавливаем URL базы данных
 config.set_main_option(
     'sqlalchemy.url',
-    str(current_app.extensions['migrate'].db.get_engine().url).replace('%', '%%')
+    str(
+        current_app.extensions['migrate'].db.get_engine().url,
+    ).replace('%', '%%'),
 )
 
 
-def run_migrations_offline():
+def run_migrations_offline() -> None:
     """Запускаем миграции в оффлайн-режиме."""
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True
+        url=url, target_metadata=target_metadata, literal_binds=True,
     )
 
     with context.begin_transaction():
         context.run_migrations()
 
 
-def run_migrations_online():
+def run_migrations_online() -> None:
     """Запускаем миграции в онлайн-режиме."""
-    def process_revision_directives(context, revision, directives):
+    def process_revision_directives(
+            context: context.ContextImpl,
+            revision: str,
+            directives: List[Dict[str, Any]],
+    ) -> None:
         if getattr(config.cmd_opts, 'autogenerate', False):
             script = directives[0]
             if script.upgrade_ops.is_empty():
@@ -53,7 +60,7 @@ def run_migrations_online():
             connection=connection,
             target_metadata=target_metadata,
             process_revision_directives=process_revision_directives,
-            **current_app.extensions['migrate'].configure_args
+            **current_app.extensions['migrate'].configure_args,
         )
 
         with context.begin_transaction():
@@ -61,6 +68,7 @@ def run_migrations_online():
 
 
 if context.is_offline_mode():
+
     run_migrations_offline()
 else:
     run_migrations_online()
