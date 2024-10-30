@@ -2,9 +2,11 @@ from __future__ import with_statement
 
 import logging
 from logging.config import fileConfig
-from typing import Any, Dict, List
+from typing import List
 
 from alembic import context
+from alembic.migration import MigrationContext
+from alembic.script import Script
 from flask import current_app
 
 # Импортируем Base и метаданные
@@ -42,7 +44,9 @@ def run_migrations_offline() -> None:
 
 def run_migrations_online() -> None:
     """Запускаем миграции в онлайн-режиме."""
-    def process_revision_directives(context, revision, directives):
+    def process_revision_directives(
+            context: MigrationContext, revision: str, directives: List[Script],
+    ) -> None:
         if getattr(config.cmd_opts, 'autogenerate', False):
             script = directives[0]
             if script.upgrade_ops.is_empty():
@@ -64,7 +68,6 @@ def run_migrations_online() -> None:
 
 
 if context.is_offline_mode():
-
     run_migrations_offline()
 else:
     run_migrations_online()
