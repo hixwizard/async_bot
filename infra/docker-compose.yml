@@ -15,11 +15,10 @@ services:
   admin:
     build:
       context: ../
-      dockerfile: infra/Dockerfile
+      dockerfile: infra/../src/admin_app/Dockerfile
     environment:
       - FLASK_APP=admin.py
       - DATABASE_URL=${DATABASE_URL}
-      - PYTHONPATH=/app/src
       - SECRET_FLASK=${SECRET_FLASK}
     depends_on:
       - db
