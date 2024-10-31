@@ -66,7 +66,7 @@ docker compose up --build
 ```
 8) Запустить интерактивную оболочку bash внутри контейнера с именем 'infra-admin-1' и создать суперпользователя с именем 'user' и паролем 'password'
 ```
-docker exec -it infra-admin-1 flask create_superuser <user> <password>
+docker exec -it infra-admin-1 flask create_superuser user password
 ```
 9) Открыть админку по ссылке http://127.0.0.1:5000/admin/
 10) Открыть бота в тг и запустить его командой "/start"
