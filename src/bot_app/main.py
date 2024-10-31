@@ -1,15 +1,5 @@
 import logging
 
-from telegram.ext import (
-    Application as TelegramApplication,
-)
-from telegram.ext import (
-    CallbackQueryHandler,
-    CommandHandler,
-    MessageHandler,
-    filters,
-)
-
 from bot import (
     confirm_answers,
     edit_answers,
@@ -24,6 +14,15 @@ from bot import (
     start_new_survey,
 )
 from config import BOT_TOKEN
+from telegram.ext import (
+    Application as TelegramApplication,
+)
+from telegram.ext import (
+    CallbackQueryHandler,
+    CommandHandler,
+    MessageHandler,
+    filters,
+)
 
 
 def init_bot() -> TelegramApplication:

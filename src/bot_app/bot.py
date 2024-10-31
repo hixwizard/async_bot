@@ -1,5 +1,8 @@
 import logging
 
+from buttons import start_keyboard
+from config import logger
+from database import get_async_db_session
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from telegram import (
@@ -10,9 +13,6 @@ from telegram import (
 )
 from telegram.ext import CallbackContext
 
-from buttons import start_keyboard
-from config import logger
-from database import get_async_db_session
 from models import Application, ApplicationStatus, Question, User
 
 

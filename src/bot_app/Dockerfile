@@ -2,11 +2,9 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY ./src/admin_app /app
+COPY ./src/bot_app /app
 COPY ./src/models.py /app/models.py
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN chmod +x /app/init_db.sh
-
-CMD ["/app/init_db.sh"]
+CMD ["python", "main.py"]
