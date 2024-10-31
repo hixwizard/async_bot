@@ -1,13 +1,8 @@
-import os
-
 import click
-from dotenv import load_dotenv
 
 from models import AdminUser, ApplicationStatus, Question
 
 from . import app, db
-
-load_dotenv()
 
 QUESTIONS = {
     1: 'Вид бизнеса: чем и как долго занимаешься?',
@@ -22,10 +17,10 @@ APP_STATUSES = ['открыта', 'в работе', 'закрыта']
 
 
 @app.cli.command('create_superuser')
-def create_superuser() -> None:
+@click.argument('login')
+@click.argument('password')
+def create_superuser(login: str, password: str) -> None:
     """Создает суперпользователя."""
-    login = os.getenv('SUPERUSER_LOGIN')
-    password = os.getenv('SUPERUSER_PASSWORD')
     if db.session.execute(
         db.select(AdminUser).filter_by(login=login),
     ).scalars().first():

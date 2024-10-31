@@ -17,7 +17,7 @@ services:
       context: ../
       dockerfile: infra/../src/admin_app/Dockerfile
     environment:
-      - FLASK_APP=admin.py
+      - FLASK_APP=${FLASK_APP}
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_FLASK=${SECRET_FLASK}
     depends_on:
@@ -30,7 +30,7 @@ services:
   telegram-bot:
     build:
       context: ../
-      dockerfile: infra/Dockerfile-telegram
+      dockerfile: infra/../src/bot_app/Dockerfile
     environment:
       - DATABASE_ASYNC_URL=${DATABASE_ASYNC_URL}
       - PYTHONPATH=/app/src
@@ -40,8 +40,6 @@ services:
       - admin
     networks:
       - mynetwork
-    command: >
-      bash -c "python main.py"
 
 networks:
   mynetwork:
