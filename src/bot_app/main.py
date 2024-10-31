@@ -1,12 +1,9 @@
-import logging
-
 from bot import (
     confirm_answers,
     edit_answers,
     error_handler,
     handle_contact_info,
     handle_edit_choice,
-    handle_message,
     handle_my_applications,
     handle_question_response,
     handle_start_button,
@@ -39,7 +36,6 @@ def init_bot() -> TelegramApplication:
                                            handle_question_response))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,
                                            handle_contact_info))
-    application.add_handler(MessageHandler(filters.ALL, handle_message))
     application.add_handler(CallbackQueryHandler(start_new_survey,
                                                  pattern="start_survey"))
     application.add_handler(CallbackQueryHandler(confirm_answers,
@@ -53,6 +49,5 @@ def init_bot() -> TelegramApplication:
 
 
 if __name__ == '__main__':
-    logging.info("Запуск Telegram бота.")
     bot = init_bot()
     bot.run_polling()
