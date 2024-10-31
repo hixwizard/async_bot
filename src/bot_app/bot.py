@@ -1,7 +1,6 @@
 import logging
 
 from buttons import start_keyboard
-from config import logger
 from database import get_async_db_session
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -23,7 +22,7 @@ async def get_questions() -> list[dict]:
                                        .order_by(Question.number))
         questions = result.scalars().all()
         return [{'number': q.number, 'question':
-            q.question} for q in questions]
+                 q.question} for q in questions]
 
 
 async def save_user_to_db(
@@ -41,9 +40,6 @@ async def save_user_to_db(
             )
             session.add(new_user)
             await session.commit()
-            logger.info(
-                f"Сохранен новый пользователь {first_name} с ID {user_id}.",
-            )
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -90,8 +86,8 @@ async def process_application(
 
 
 async def save_application_to_db(query: CallbackQuery,
-                                   context: CallbackContext,
-                                   answers: str) -> None:
+                                 context: CallbackContext,
+                                 answers: str) -> None:
     """Финальное сохранение заявки в базе данных."""
     user_id = str(query.from_user.id)
 
@@ -114,9 +110,6 @@ async def save_application_to_db(query: CallbackQuery,
         session.add(application)
         await session.commit()
 
-    logger.info(
-        f'Заявка от пользователя {query.from_user.first_name} '
-        f'подтверждена и сохранена.')
     await query.message.reply_text("Заявка успешно сохранена!")
 
 
@@ -175,7 +168,6 @@ async def finalize_application(
         session.add(application)
         await session.commit()
 
-    logger.info(f'Заявка от пользователя {user_id} подтверждена и сохранена.')
     await update.effective_chat.send_message(
         f"Заявка успешно сохранена! Номер вашей заявки: {application_number}",
     )
@@ -219,10 +211,6 @@ async def handle_question_response(
         await summarize_answers(update, context)
         return
 
-    user = update.message.from_user
-    answer = update.message.text
-    logger.info(f"Ответ пользователя {user.first_name}: {answer}")
-
     if 'current_question' in context.user_data:
         question_index = context.user_data['current_question']
         questions = context.user_data['questions']
@@ -234,13 +222,6 @@ async def handle_question_response(
         await update.message.reply_text(
             'Нажмите "Начать", чтобы начать опрос.',
         )
-
-
-async def handle_message(update: Update, context: CallbackContext) -> None:
-    """Обработка произвольных сообщений от пользователей."""
-    message = update.message.text
-    logger.info(f"Получено сообщение: {message}")
-    await update.message.reply_text("Ваше сообщение получено!")
 
 
 async def error_handler(update: Update, context: CallbackContext) -> None:
