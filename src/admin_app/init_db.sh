@@ -4,7 +4,9 @@
 if [ -d "migrations" ]; then
     echo "Директория migrations существует. Выполняю обновление базы данных..."
     flask db upgrade
-    flask createsuperuser hix 1
+    flask create_superuser
+    flask create_questions
+    flask create_statuses
     flask run --host=0.0.0.0
 else
     echo "Директория migrations не найдена. Инициализация базы данных..."
@@ -12,6 +14,8 @@ else
     cp env.py migrations/env.py
     flask db migrate
     flask db upgrade
-    flask createsuperuser hix 1
+    flask create_superuser
+    flask create_questions
+    flask create_statuses
     flask run --host=0.0.0.0
 fi
