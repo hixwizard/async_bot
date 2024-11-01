@@ -27,7 +27,7 @@ async def get_questions() -> list[dict]:
 
 async def save_user_to_db(
         user_id: str, first_name: str, username: str,
-) -> None:
+        context: CallbackContext) -> None:
     """Сохранение пользователя в базу данных, если его еще нет."""
     async with get_async_db_session() as session:
         result = await session.execute(select(User).filter_by(id=user_id))
@@ -40,6 +40,9 @@ async def save_user_to_db(
             )
             session.add(new_user)
             await session.commit()
+            user = new_user
+
+        context.user_data['is_blocked'] = user.is_blocked
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -47,7 +50,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     user_id = str(update.message.from_user.id)
     first_name = update.message.from_user.first_name
     username = update.message.from_user.username
-    await save_user_to_db(user_id, first_name, username)
+    await save_user_to_db(user_id, first_name, username, context)
     reply_markup = start_keyboard()
     await update.message.reply_text(
         'Добро пожаловать! Выберите нужное действие:',
@@ -55,9 +58,20 @@ async def start(update: Update, context: CallbackContext) -> None:
     )
 
 
-async def handle_start_button(
-        update: Update, context: CallbackContext) -> None:
+async def handle_start_button(update: Update,
+                              context: CallbackContext) -> None:
     """Обработка нажатия кнопки 'Создать заявку' и запуск первого вопроса."""
+    user_id = str(update.message.from_user.id)
+
+    async with get_async_db_session() as session:
+        result = await session.execute(select(User).filter_by(id=user_id))
+        user = result.scalars().first()
+
+        if user.is_blocked:
+            await update.message.reply_text(
+                "Вы заблокированы и не можете создавать заявки.")
+            return
+
     questions = await get_questions()
     if questions:
         context.user_data['answers'] = []
@@ -116,10 +130,20 @@ async def save_application_to_db(query: CallbackQuery,
 async def handle_contact_info(
         update: Update, context: CallbackContext) -> None:
     """Обработка контактной информации пользователя и завершение заявки."""
+    user_id = str(update.message.from_user.id)
+    async with get_async_db_session() as session:
+        result = await session.execute(select(User).filter_by(id=user_id))
+        user = result.scalars().first()
+        context.user_data['is_blocked'] = user.is_blocked
+
+    if context.user_data.get('is_blocked', False):
+        await update.message.reply_text("Вы заблокированы и не можете "
+                                        "предоставлять контактную информацию.")
+        return
+
     if not context.user_data.get('awaiting_contact'):
         return
 
-    user_id = str(update.message.from_user.id)
     contact_info = update.message.text
 
     async with get_async_db_session() as session:
@@ -199,6 +223,17 @@ async def start_new_survey(update: Update, context: CallbackContext) -> None:
 async def handle_question_response(
         update: Update, context: CallbackContext) -> None:
     """Обрабатывает ответ пользователя на вопрос."""
+    user_id = str(update.message.from_user.id)
+    async with get_async_db_session() as session:
+        result = await session.execute(select(User).filter_by(id=user_id))
+        user = result.scalars().first()
+        context.user_data['is_blocked'] = user.is_blocked
+
+    if context.user_data.get('is_blocked', False):
+        await update.message.reply_text("Вы заблокированы и не можете "
+                                        "отвечать на вопросы.")
+        return
+
     if context.user_data.get('awaiting_contact', False):
         await handle_contact_info(update, context)
         return
@@ -229,10 +264,20 @@ async def error_handler(update: Update, context: CallbackContext) -> None:
     logging.error(f"Update {update} caused error {context.error}")
 
 
-async def handle_my_applications(update: Update,
-                                 context: CallbackContext) -> None:
+async def handle_my_applications(
+        update: Update, context: CallbackContext) -> None:
     """Обрабатывает запрос на просмотр заявок пользователя."""
     user_id = str(update.message.from_user.id)
+
+    async with get_async_db_session() as session:
+        result = await session.execute(select(User).filter_by(id=user_id))
+        user = result.scalars().first()
+
+        if user.is_blocked:
+            await update.message.reply_text("Вы заблокированы и не можете "
+                                            "просматривать свои заявки.")
+            return
+
     applications_text = "Ваши заявки:\n"
 
     async with get_async_db_session() as session:
