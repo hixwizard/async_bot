@@ -13,6 +13,7 @@ from flask_admin import expose, helpers
 from flask_admin.contrib.sqla import ModelView
 
 from .forms import LoginForm
+from .utils import get_amount_opened_apps
 
 
 class CustomAdminIndexView(admin.AdminIndexView):
@@ -25,9 +26,14 @@ class CustomAdminIndexView(admin.AdminIndexView):
 
     @expose("/")
     def index(self) -> Response:
-        """Проверяет, авторизован ли пользователь."""
+        """Проверяет, авторизован ли пользователь.
+
+        Выводит на главную страницу сообщение о количестве открытых заявок.
+        """
         if not login.current_user.is_authenticated:
             return redirect(url_for(".login_view"))
+        amount = get_amount_opened_apps()
+        flash(f'Количество заявок в статусе "открыта": {amount}', 'info')
         return super().index()
 
     @expose("/login/", methods=("GET", "POST"))
@@ -38,7 +44,6 @@ class CustomAdminIndexView(admin.AdminIndexView):
             user = form.get_user()
             login.login_user(user)
         if login.current_user.is_authenticated:
-            flash('Вы вошли в систему!', 'success')
             return redirect(url_for(".index"))
         self._template_args["form"] = form
         return super().index()
@@ -47,7 +52,7 @@ class CustomAdminIndexView(admin.AdminIndexView):
     def logout_view(self) -> Response:
         """Определяет логику выхода пользователя из системы."""
         login.logout_user()
-        flash('Вы вышли из системы.', 'info')
+        flash('Вы вышли из системы.', 'error')
         return redirect(url_for(".index"))
 
 
