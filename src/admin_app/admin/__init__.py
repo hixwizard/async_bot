@@ -14,4 +14,4 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from . import admin, admin_views, cli_commands, forms, views # noqa
+from . import admin, admin_views, cli_commands, forms, utils, views # noqa
