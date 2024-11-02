@@ -7,13 +7,19 @@ from models import (
     AdminUser,
     Application,
     ApplicationCheckStatus,
-    ApplicationComment,
     Question,
     User,
 )
 
 from . import app, db
-from .admin_views import CustomAdminIndexView, CustomModelView, SuperModelView
+from .admin_views import (
+    AdminUserModelView,
+    ApplicationModelView,
+    CustomAdminIndexView,
+    CustomModelView,
+    QuestionModelView,
+    UserModelView,
+)
 
 
 def init_login() -> None:
@@ -35,17 +41,15 @@ admin = admin.Admin(
     app,
     name='Turutin Bot',
     template_mode='bootstrap4',
-    index_view=CustomAdminIndexView(),
+    index_view=CustomAdminIndexView(name='Главная'),
     base_template='my_master.html',
 )
 
 # Добавление моделей в админку
-admin.add_view(SuperModelView(AdminUser, db.session,
-                              name='Личный кабинет'))
-admin.add_view(CustomModelView(User, db.session, name='Клиенты'))
-admin.add_view(CustomModelView(Application, db.session, name='Заявки'))
+admin.add_view(AdminUserModelView(AdminUser, db.session,
+                                  name='Личный кабинет'))
+admin.add_view(UserModelView(User, db.session, name='Клиенты'))
+admin.add_view(ApplicationModelView(Application, db.session, name='Заявки'))
 admin.add_view(CustomModelView(ApplicationCheckStatus, db.session,
                                name='Статусы заявок'))
-admin.add_view(CustomModelView(ApplicationComment, db.session,
-                               name='Комментарии'))
-admin.add_view(SuperModelView(Question, db.session, name='Вопросы'))
+admin.add_view(QuestionModelView(Question, db.session, name='Вопросы'))
