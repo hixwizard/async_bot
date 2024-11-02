@@ -24,6 +24,7 @@ services:
       - db
     networks:
       - turutin-network
+    restart: unless-stopped
     ports:
       - "127.0.0.1:8000:8000"
 
@@ -40,6 +41,7 @@ services:
       - admin
     networks:
       - turutin-network
+    restart: unless-stopped
 
 networks:
   turutin-network:
