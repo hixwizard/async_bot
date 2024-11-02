@@ -58,19 +58,13 @@ async def start(update: Update, context: CallbackContext) -> None:
     )
 
 
-async def handle_start_button(update: Update,
-                              context: CallbackContext) -> None:
+async def handle_start_button(
+        update: Update, context: CallbackContext) -> None:
     """Обработка нажатия кнопки 'Создать заявку' и запуск первого вопроса."""
     user_id = str(update.message.from_user.id)
 
-    async with get_async_db_session() as session:
-        result = await session.execute(select(User).filter_by(id=user_id))
-        user = result.scalars().first()
-
-        if user.is_blocked:
-            await update.message.reply_text(
-                "Вы заблокированы и не можете создавать заявки.")
-            return
+    if await check_user_blocked(user_id, context):
+        return
 
     questions = await get_questions()
     if questions:
@@ -131,14 +125,7 @@ async def handle_contact_info(
         update: Update, context: CallbackContext) -> None:
     """Обработка контактной информации пользователя и завершение заявки."""
     user_id = str(update.message.from_user.id)
-    async with get_async_db_session() as session:
-        result = await session.execute(select(User).filter_by(id=user_id))
-        user = result.scalars().first()
-        context.user_data['is_blocked'] = user.is_blocked
-
-    if context.user_data.get('is_blocked', False):
-        await update.message.reply_text("Вы заблокированы и не можете "
-                                        "предоставлять контактную информацию.")
+    if await check_user_blocked(user_id, context):
         return
 
     if not context.user_data.get('awaiting_contact'):
@@ -224,14 +211,7 @@ async def handle_question_response(
         update: Update, context: CallbackContext) -> None:
     """Обрабатывает ответ пользователя на вопрос."""
     user_id = str(update.message.from_user.id)
-    async with get_async_db_session() as session:
-        result = await session.execute(select(User).filter_by(id=user_id))
-        user = result.scalars().first()
-        context.user_data['is_blocked'] = user.is_blocked
-
-    if context.user_data.get('is_blocked', False):
-        await update.message.reply_text("Вы заблокированы и не можете "
-                                        "отвечать на вопросы.")
+    if await check_user_blocked(user_id, context):
         return
 
     if context.user_data.get('awaiting_contact', False):
@@ -269,14 +249,8 @@ async def handle_my_applications(
     """Обрабатывает запрос на просмотр заявок пользователя."""
     user_id = str(update.message.from_user.id)
 
-    async with get_async_db_session() as session:
-        result = await session.execute(select(User).filter_by(id=user_id))
-        user = result.scalars().first()
-
-        if user.is_blocked:
-            await update.message.reply_text("Вы заблокированы и не можете "
-                                            "просматривать свои заявки.")
-            return
+    if await check_user_blocked(user_id, context):
+        return
 
     applications_text = "Ваши заявки:\n"
 
@@ -394,3 +368,12 @@ async def handle_edit_choice(update: Update, context: CallbackContext) -> None:
                                       f"{question['question']}")
     else:
         await query.edit_message_text("Вопрос не найден.")
+
+
+async def check_user_blocked(user_id: str, context: CallbackContext) -> bool:
+    """Проверяет, заблокирован ли пользователь."""
+    async with get_async_db_session() as session:
+        result = await session.execute(select(User).filter_by(id=user_id))
+        user = result.scalars().first()
+        context.user_data['is_blocked'] = user.is_blocked
+    return context.user_data['is_blocked']
