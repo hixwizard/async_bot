@@ -71,7 +71,7 @@ class CustomModelView(ModelView):
             self, name: str, **kwargs: Dict[str, Any],
     ) -> Response:
         """Перенаправляет пользователя на страницу '/admin'."""
-        flash('Вы не авторизованы. Пожалуйста, войдите в систему.', 'warning')
+        flash('Вы не авторизованы. Пожалуйста, войдите в систему.', 'error')
         return redirect(url_for('admin.index'))
 
 
@@ -89,3 +89,52 @@ class SuperModelView(ModelView):
     ) -> Response:
         """Перенаправляет пользователя на страницу '/admin'."""
         return redirect(url_for('admin.index'))
+
+
+class AdminUserModelView(SuperModelView):
+
+    """Класс представления модели AdminUser."""
+
+    column_labels = {
+        'login': 'Логин',
+        'password': 'Пароль',
+        'role': 'Роль',
+    }
+
+
+class UserModelView(SuperModelView):
+
+    """Класс представления для модели User."""
+
+    column_list = ('id', 'name', 'email', 'phone', 'is_blocked')
+    column_labels = {
+        'id': 'Телеграм ID',
+        'name': 'Имя',
+        'email': 'Электронная почта',
+        'phone': 'Телефон',
+        'is_blocked': 'Заблокировать',
+    }
+
+
+class ApplicationModelView(CustomModelView):
+
+    """Класс представления для модели Application."""
+
+    column_list = ('id', 'user_id', 'answers', 'status_id')
+    column_labels = {
+        'id': 'Номер заявки',
+        'user_id': 'Телеграм ID заявителя',
+        'answers': 'Текст заявки',
+        'status_id': 'Статус заявки',
+        'comments': 'Комментарии к заявке',
+    }
+
+
+class QuestionModelView(SuperModelView):
+
+    """Класс представления для модели Question."""
+
+    column_labels = {
+        'number': 'Номер',
+        'question': 'Вопрос',
+    }
