@@ -130,6 +130,22 @@ class ApplicationModelView(CustomModelView):
     }
 
 
+class AppCheckStatusModelView(CustomModelView):
+
+    """Класс представления для модели ApplicationCheckStatus."""
+
+    column_list = (
+        'id', 'application_id', 'old_status', 'new_status', 'timestamp',
+    )
+    column_labels = {
+        'id': 'Номер в журнале',
+        'application_id': 'Номер заявки',
+        'old_status': 'Старый статус',
+        'new_status': 'Новый статус',
+        'timestamp': 'Дата изменений',
+    }
+
+
 class QuestionModelView(SuperModelView):
 
     """Класс представления для модели Question."""
