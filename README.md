@@ -33,8 +33,8 @@ docker system prune -a
 ```
 
 
-## Запуск docker-compose на локальном порту 127.0.0.1 (для пользователей Windows)
-### Проверить, что файлы dockerfile, init_db.sh, docker-compose - LF (для админки)
+## Запуск docker-compose на локальном порту 127.0.0.1:8000 (для пользователей Windows)
+### Проверить, что файлы dockerfile, start.sh, docker-compose - LF (для админки)
 ### Для выполенения следующих команд использовать среду выполнения Linux - WSL 
 1) Обновить список доступных пакетов из репозиториев, чтобы получить последние версии пакетов
 ```
@@ -68,7 +68,7 @@ docker compose up --build
 ```
 docker exec -it infra-admin-1 flask create_superuser user password
 ```
-9) Открыть админку по ссылке http://127.0.0.1:5000/admin/
+9) Открыть админку по ссылке http://127.0.0.1:8000
 10) Открыть бота в тг и запустить его командой "/start"
 
 
