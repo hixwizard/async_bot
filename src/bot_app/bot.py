@@ -214,8 +214,17 @@ async def handle_question_response(
     if await check_user_blocked(user_id, context):
         return
 
+    if (not context.user_data.get('awaiting_contact') and
+        not context.user_data.get('awaiting_confirmation') and
+        'current_question' not in context.user_data and
+        'editing_question' not in context.user_data):
+        return
+
     if context.user_data.get('awaiting_contact', False):
         await handle_contact_info(update, context)
+        return
+
+    if context.user_data.get('awaiting_confirmation', False):
         return
 
     if 'editing_question' in context.user_data:
