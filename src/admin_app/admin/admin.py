@@ -14,9 +14,9 @@ from models import (
 from . import app, db
 from .admin_views import (
     AdminUserModelView,
+    AppCheckStatusModelView,
     ApplicationModelView,
     CustomAdminIndexView,
-    CustomModelView,
     QuestionModelView,
     UserModelView,
 )
@@ -50,6 +50,6 @@ admin.add_view(AdminUserModelView(AdminUser, db.session,
                                   name='Личный кабинет'))
 admin.add_view(UserModelView(User, db.session, name='Клиенты'))
 admin.add_view(ApplicationModelView(Application, db.session, name='Заявки'))
-admin.add_view(CustomModelView(ApplicationCheckStatus, db.session,
-                               name='Статусы заявок'))
+admin.add_view(AppCheckStatusModelView(ApplicationCheckStatus, db.session,
+                                       name='Журнал заявок'))
 admin.add_view(QuestionModelView(Question, db.session, name='Вопросы'))
