@@ -7,6 +7,6 @@ COPY ./src/models.py /app/models.py
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN chmod +x /app/init_db.sh
+RUN chmod +x /app/start.sh
 
-CMD ["/app/init_db.sh"]
+CMD ["/app/start.sh"]
