@@ -58,9 +58,23 @@ async def start(update: Update, context: CallbackContext) -> None:
     )
 
 
+def reset_application_data(context: CallbackContext) -> None:
+    """Очищает данные текущей заявки из user_data."""
+    context.user_data.pop('answers', None)
+    context.user_data.pop('current_question', None)
+    context.user_data.pop('questions', None)
+    context.user_data.pop('started', None)
+    context.user_data.pop('awaiting_contact', None)
+    context.user_data.pop('awaiting_confirmation', None)
+    context.user_data.pop('editing_question', None)
+    context.user_data.pop('answers_str', None)
+    context.user_data.pop('survey_completed', None)
+
+
 async def handle_start_button(
         update: Update, context: CallbackContext) -> None:
     """Обработка нажатия кнопки 'Создать заявку' и запуск первого вопроса."""
+    reset_application_data(context)
     user_id = str(update.message.from_user.id)
 
     if await check_user_blocked(user_id, context):
@@ -109,7 +123,6 @@ async def save_application_to_db(query: CallbackQuery,
             session.add(status)
             await session.commit()
 
-        # Создаём новую заявку
         application = Application(
             user_id=user_id,
             status_id=status.id,
@@ -182,6 +195,7 @@ async def finalize_application(
     await update.effective_chat.send_message(
         f"Заявка успешно сохранена! Номер вашей заявки: {application_number}",
     )
+    context.user_data['survey_completed'] = True
 
 
 async def ask_for_contact_info(
@@ -210,21 +224,24 @@ async def start_new_survey(update: Update, context: CallbackContext) -> None:
 async def handle_question_response(
         update: Update, context: CallbackContext) -> None:
     """Обрабатывает ответ пользователя на вопрос."""
+    if context.user_data.get('survey_completed', False):
+        return
+
     user_id = str(update.message.from_user.id)
     if await check_user_blocked(user_id, context):
         return
 
-    if (not context.user_data.get('awaiting_contact') and
-        not context.user_data.get('awaiting_confirmation') and
-        'current_question' not in context.user_data and
-        'editing_question' not in context.user_data):
-        return
-
-    if context.user_data.get('awaiting_contact', False):
-        await handle_contact_info(update, context)
+    if context.user_data.get('awaiting_edit_selection', False):
+        await update.message.reply_text(
+            "Пожалуйста, выберите вопрос для редактирования.",
+        )
         return
 
     if context.user_data.get('awaiting_confirmation', False):
+        await update.message.reply_text(
+            "Пожалуйста, нажмите «Подтвердить» "
+            "или «Редактировать» для продолжения.",
+        )
         return
 
     if 'editing_question' in context.user_data:
@@ -232,7 +249,12 @@ async def handle_question_response(
         answers = context.user_data.get('answers', [])
         answers[question_number - 1] = update.message.text
         context.user_data['answers'] = answers
+
         await summarize_answers(update, context)
+        return
+
+    if context.user_data.get('awaiting_contact', False):
+        await handle_contact_info(update, context)
         return
 
     if 'current_question' in context.user_data:
@@ -244,7 +266,7 @@ async def handle_question_response(
             await ask_for_contact_info(update, context)
     else:
         await update.message.reply_text(
-            'Нажмите "Начать", чтобы начать опрос.',
+            'Нажмите "Создать заявку", чтобы начать опрос.',
         )
 
 
@@ -317,11 +339,11 @@ async def confirm_answers(update: Update, context: CallbackContext) -> None:
                                   "Пожалуйста, укажите контактные данные.")
 
     answers = context.user_data.get('answers', [])
-
     answers_str = "; ".join(f"{i + 1}. {ans}" for i, ans in enumerate(answers))
 
-    context.user_data['awaiting_contact'] = True
+    context.user_data['awaiting_confirmation'] = False
 
+    context.user_data['awaiting_contact'] = True
     context.user_data['answers_str'] = answers_str
     await ask_for_contact_info(update, context)
 
@@ -330,6 +352,9 @@ async def edit_answers(update: Update, context: CallbackContext) -> None:
     """Отображает список вопросов для редактирования."""
     query = update.callback_query
     await query.answer()
+
+    context.user_data['awaiting_edit_selection'] = True
+    context.user_data['awaiting_confirmation'] = False
 
     questions = context.user_data.get('questions', [])
     if not questions:
@@ -368,10 +393,11 @@ async def handle_edit_choice(update: Update, context: CallbackContext) -> None:
 
     question_number = int(query.data.split('_')[1])
     questions = context.user_data.get('questions', [])
-    question = next((q for q in questions if q['number'] == question_number),
-                    None)
+    question = next((q for q in questions if q['number'] ==
+                     question_number), None)
 
     if question:
+        context.user_data['awaiting_edit_selection'] = False
         context.user_data['editing_question'] = question_number
         await query.edit_message_text(f"Редактируйте ответ на вопрос: "
                                       f"{question['question']}")
