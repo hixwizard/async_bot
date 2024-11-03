@@ -1,6 +1,6 @@
 ```mermaid
 graph LR;
-  (Uvicorn Telegam-bot) <--> PostgreSQL(SQLAlchemy, PostgreSQL) <--> Flask-admin(Gunicorn Flask-admin);
+  Uvicorn_Telegram_bot <--> PostgreSQL_SQLAlchemy <--> Flask_admin_Gunicorn;
 ```
 # Шаблон для проектов со стилизатором Ruff
 
