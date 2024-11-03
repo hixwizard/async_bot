@@ -316,8 +316,8 @@ async def summarize_answers(update: Update, context: CallbackContext) -> None:
     summary_text = "Проверьте свои ответы:\n\n"
     for idx, question in enumerate(questions):
         answer = answers[idx] if idx < len(answers) else "Не отвечено"
-        summary_text += (f"{question['number']}. "
-                         f"{question['question']}\nОтвет: {answer}\n\n")
+        summary_text += (f"{question['number']}. {question['question']}\n"
+                         f"Ответ: {answer}\n\n")
 
     reply_markup = InlineKeyboardMarkup([
         [InlineKeyboardButton(
@@ -338,11 +338,14 @@ async def confirm_answers(update: Update, context: CallbackContext) -> None:
     await query.edit_message_text("Ваши ответы подтверждены. "
                                   "Пожалуйста, укажите контактные данные.")
 
+    questions = context.user_data.get('questions', [])
     answers = context.user_data.get('answers', [])
-    answers_str = "; ".join(f"{i + 1}. {ans}" for i, ans in enumerate(answers))
+    answers_str = "; ".join(
+        f"{q['number']}. {q['question']} Ответ: {a}"
+        for q, a in zip(questions, answers)
+    )
 
     context.user_data['awaiting_confirmation'] = False
-
     context.user_data['awaiting_contact'] = True
     context.user_data['answers_str'] = answers_str
     await ask_for_contact_info(update, context)
