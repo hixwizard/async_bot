@@ -1,3 +1,7 @@
+```mermaid
+graph LR;
+  bot(Uvicorn) <--> PostgreSQL(SQLAlchemy) <--> Flask-admin(Gunicorn);
+```
 # Шаблон для проектов со стилизатором Ruff
 
 ## Основное
