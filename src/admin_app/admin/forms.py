@@ -13,11 +13,11 @@ class LoginForm(form.Form):
 
     login = fields.StringField(
         'Логин',
-        validators=[validators.InputRequired()]
+        validators=[validators.InputRequired()],
     )
     password = fields.PasswordField(
         'Пароль',
-        validators=[validators.InputRequired()]
+        validators=[validators.InputRequired()],
     )
 
     def validate_login(self, field: Field) -> None:
