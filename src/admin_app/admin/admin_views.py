@@ -100,6 +100,7 @@ class AdminUserModelView(SuperModelView):
         'password': 'Пароль',
         'role': 'Роль',
     }
+    form_columns = ('login', 'password', 'role')
 
 
 class UserModelView(SuperModelView):
@@ -114,20 +115,21 @@ class UserModelView(SuperModelView):
         'phone': 'Телефон',
         'is_blocked': 'Заблокировать',
     }
+    form_columns = ('id', 'name', 'email', 'phone', 'is_blocked')
 
 
 class ApplicationModelView(CustomModelView):
 
     """Класс представления для модели Application."""
 
-    column_list = ('id', 'user_id', 'answers', 'status_id')
+    column_list = ('id', 'user_id', 'answers', 'status')
     column_labels = {
         'id': 'Номер заявки',
         'user_id': 'Телеграм ID заявителя',
         'answers': 'Текст заявки',
-        'status_id': 'Статус заявки',
-        'comments': 'Комментарии к заявке',
+        'status': 'Статус заявки',
     }
+    form_columns = ('user_id', 'answers', 'status')
 
 
 class AppCheckStatusModelView(CustomModelView):
@@ -144,6 +146,9 @@ class AppCheckStatusModelView(CustomModelView):
         'new_status': 'Новый статус',
         'timestamp': 'Дата изменений',
     }
+    form_columns = (
+        'application_id', 'old_status', 'new_status', 'timestamp',
+    )
 
 
 class QuestionModelView(SuperModelView):

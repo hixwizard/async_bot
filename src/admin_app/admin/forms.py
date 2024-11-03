@@ -11,8 +11,14 @@ class LoginForm(form.Form):
 
     """Форма входа в систему."""
 
-    login = fields.StringField(validators=[validators.InputRequired()])
-    password = fields.PasswordField(validators=[validators.InputRequired()])
+    login = fields.StringField(
+        'Логин',
+        validators=[validators.InputRequired()]
+    )
+    password = fields.PasswordField(
+        'Пароль',
+        validators=[validators.InputRequired()]
+    )
 
     def validate_login(self, field: Field) -> None:
         """Выполняет валидацию имени пользователя и пароля."""
