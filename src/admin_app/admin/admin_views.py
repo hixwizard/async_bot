@@ -122,14 +122,15 @@ class ApplicationModelView(CustomModelView):
 
     """Класс представления для модели Application."""
 
-    column_list = ('id', 'user_id', 'answers', 'status')
+    column_list = ('id', 'user_id', 'answers', 'status', 'comment')
     column_labels = {
         'id': 'Номер заявки',
         'user_id': 'Телеграм ID заявителя',
         'answers': 'Текст заявки',
         'status': 'Статус заявки',
+        'comment': 'Комментарий',
     }
-    form_columns = ('user_id', 'answers', 'status')
+    form_columns = ('user_id', 'answers', 'status', 'comment')
 
 
 class AppCheckStatusModelView(CustomModelView):

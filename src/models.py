@@ -26,10 +26,6 @@ class AdminUser(Base):
         Enum('admin', 'operator', name='admin_role_enum'),
         default='admin',
     )
-    operator_comments = relationship(
-        'ApplicationComment',
-        back_populates='operator',
-    )
 
     @property
     def is_authenticated(self) -> bool:
@@ -90,10 +86,10 @@ class Application(Base):
         nullable=False,
     )
     answers = Column(String, nullable=False)  # Ответы клиента на вопросы
+    comment = Column(String)
 
     user = relationship('User', back_populates='applications')
     status = relationship('ApplicationStatus', back_populates='applications')
-    comments = relationship('ApplicationComment', back_populates='application')
 
     def __repr__(self) -> str:
         # Отображаем имя пользователя и статус вместо объектов
@@ -139,36 +135,6 @@ class ApplicationCheckStatus(Base):
     old_status = Column(String, nullable=False)
     new_status = Column(String, nullable=False)
     timestamp = Column(DateTime, default=func.now())
-
-
-class ApplicationComment(Base):
-
-    """Модель комментариев оператора к заявке."""
-
-    __tablename__ = 'application_comments'
-
-    id = Column(Integer, primary_key=True)
-    application_id = Column(
-        Integer,
-        ForeignKey(
-            'applications.id',
-            name='fk_application_comments_application_id_applications',
-        ),
-        nullable=False,
-    )
-    operator_id = Column(
-        Integer,
-        ForeignKey(
-            'admin_users.id',
-            name='fk_application_comments_operator_id_admin_users',
-        ),
-        nullable=False,
-    )  # ID оператора, который оставил комментарий
-    comment = Column(String, nullable=True)  # Может быть пустым
-    timestamp = Column(DateTime, default=func.now())  # Время создания
-
-    application = relationship('Application', back_populates='comments')
-    operator = relationship('AdminUser', back_populates='operator_comments')
 
 
 class Question(Base):
