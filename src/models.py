@@ -1,3 +1,6 @@
+import asyncio
+import os
+
 from sqlalchemy import (
     Boolean,
     Column,
@@ -6,9 +9,11 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    event,
     func,
 )
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import Session, declarative_base, relationship
+from telegram import Bot
 
 Base = declarative_base()
 
@@ -53,7 +58,7 @@ class User(Base):
 
     __tablename__ = 'users'
 
-    id = Column(String, primary_key=True, nullable=False)  # ID из Telegram
+    id = Column(String, primary_key=True, nullable=False)
     name = Column(String, nullable=False)
     email = Column(String, unique=True)
     phone = Column(String)
@@ -85,14 +90,13 @@ class Application(Base):
         ),
         nullable=False,
     )
-    answers = Column(String, nullable=False)  # Ответы клиента на вопросы
+    answers = Column(String, nullable=False)
     comment = Column(String)
 
     user = relationship('User', back_populates='applications')
     status = relationship('ApplicationStatus', back_populates='applications')
 
     def __repr__(self) -> str:
-        # Отображаем имя пользователя и статус вместо объектов
         user_name = self.user.name if self.user else 'Unknown User'
         status_text = self.status.status if self.status else 'Unknown Status'
         return (f"Application(user='{user_name}', status='{status_text}', "
@@ -144,5 +148,47 @@ class Question(Base):
     __tablename__ = 'questions'
 
     id = Column(Integer, primary_key=True)
-    number = Column(Integer, nullable=False)  # Порядок вопросов
+    number = Column(Integer, nullable=False)
     question = Column(String, nullable=False)
+
+
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+
+
+async def notify_user(user_id: int, application_id: int, old_status: str,
+                      new_status: str) -> None:
+    """Отправляет пользователю уведомление об изменении статуса заявки."""
+    bot = Bot(token=BOT_TOKEN)
+    message = (f"Статус вашей заявки № {application_id} "
+               f"изменён с '{old_status}' на '{new_status}'.")
+    await bot.send_message(chat_id=user_id, text=message)
+
+
+async def log_status_change(session: Session, flush_context: any,
+                            instances: list) -> None:
+    """Логирует изменение статуса заявки и уведомляет пользователя об этом."""
+    for instance in session.dirty:
+        if isinstance(instance, Application):
+            old_status = session.query(ApplicationStatus).get(
+                instance.status_id).status
+            new_status = instance.status.status
+
+            if old_status != new_status:
+                log_entry = ApplicationCheckStatus(
+                    application_id=instance.id,
+                    old_status=old_status,
+                    new_status=new_status,
+                )
+                session.add(log_entry)
+
+                await notify_user(instance.user_id, instance.id, old_status,
+                                  new_status)
+
+
+@event.listens_for(Session, 'before_flush')
+def before_flush_handler(session: Session, flush_context: any,
+                         instances: list) -> None:
+    """Обрабатывает изменения статуса заявок перед сохранением."""
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(log_status_change(session, flush_context,
+                                              instances))
