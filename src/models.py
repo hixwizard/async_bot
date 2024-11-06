@@ -190,5 +190,9 @@ def before_flush_handler(session: Session, flush_context: any,
                          instances: list) -> None:
     """Обрабатывает изменения статуса заявок перед сохранением."""
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(log_status_change(session, flush_context,
+    if loop.is_running():
+        asyncio.create_task(log_status_change(session, flush_context,
                                               instances))
+    else:
+        loop.run_until_complete(log_status_change(session, flush_context,
+                                                  instances))
