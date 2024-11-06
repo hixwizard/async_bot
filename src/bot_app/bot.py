@@ -224,10 +224,10 @@ async def start_new_survey(update: Update, context: CallbackContext) -> None:
 async def handle_question_response(
         update: Update, context: CallbackContext) -> None:
     """Обрабатывает ответ пользователя на вопрос."""
+    user_id = str(update.message.from_user.id)
     if context.user_data.get('survey_completed', False):
         return
 
-    user_id = str(update.message.from_user.id)
     if await check_user_blocked(user_id, context):
         return
 
