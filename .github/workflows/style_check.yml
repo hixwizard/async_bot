@@ -5,8 +5,7 @@ on:
   push:
     branches:
       - develop
-      - master
-      - main
+
 jobs:
   check_style:
     runs-on: ubuntu-latest
