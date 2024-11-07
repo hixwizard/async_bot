@@ -159,7 +159,7 @@ async def notify_user(user_id: int, application_id: int, old_status: str,
                       new_status: str) -> None:
     """Отправляет пользователю уведомление об изменении статуса заявки."""
     bot = Bot(token=BOT_TOKEN)
-    message = (f"Статус вашей заявки № {application_id} - {new_status}.")
+    message = f"Статус вашей заявки № {application_id} - {new_status}."
     await bot.send_message(chat_id=user_id, text=message)
 
 
