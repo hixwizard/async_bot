@@ -16,10 +16,15 @@
 
 ### infra/
 Здесь находится файл для запуска сети через CI/CD:
+
 `docker-compose.production.yml`
+
 Файл локального запуска:
+
 `docker-compose.yml`
+
 Пример переменных окружения:
+
 `.env.example`
 
 ## Запуск проекта с помощью CI/CD
