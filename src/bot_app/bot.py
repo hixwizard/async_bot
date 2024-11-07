@@ -196,14 +196,26 @@ async def finalize_application(
         f"Заявка успешно сохранена! Номер вашей заявки: {application_number}",
     )
     context.user_data['survey_completed'] = True
+    context.user_data['awaiting_contact'] = False
 
 
 async def ask_for_contact_info(
         update: Update, context: CallbackContext) -> None:
     """Запрашивает у пользователя номер тел. или email после подтверждения."""
-    await update.effective_chat.send_message(
-        'Введите ваш номер телефона или email:',
-    )
+    user_id = str(update.effective_user.id)
+
+    async with get_async_db_session() as session:
+        result = await session.execute(select(User).filter_by(id=user_id))
+        user_record = result.scalars().first()
+
+        if user_record and (user_record.email or user_record.phone):
+            await finalize_application(update, context)
+        else:
+            await update.effective_chat.send_message(
+                'Пожалуйста, укажите контактные данные.\n'
+                'Введите ваш номер телефона или email:',
+            )
+            context.user_data['awaiting_contact'] = True
 
 
 async def start_new_survey(update: Update, context: CallbackContext) -> None:
@@ -335,8 +347,7 @@ async def confirm_answers(update: Update, context: CallbackContext) -> None:
     """Подтверждает ответы, запрашивает контактные данные."""
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text("Ваши ответы подтверждены. "
-                                  "Пожалуйста, укажите контактные данные.")
+    await query.edit_message_text("Ваши ответы подтверждены. ")
 
     questions = context.user_data.get('questions', [])
     answers = context.user_data.get('answers', [])
