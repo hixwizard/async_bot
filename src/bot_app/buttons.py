@@ -10,7 +10,6 @@ def start_keyboard() -> ReplyKeyboardMarkup:
     return ReplyKeyboardMarkup(
         [['Создать заявку', 'Мои заявки']],
         one_time_keyboard=True,
-        resize_keyboard=True,
     )
 
 
