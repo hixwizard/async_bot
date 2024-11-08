@@ -9,6 +9,7 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    Text,
     event,
     func,
 )
@@ -90,7 +91,7 @@ class Application(Base):
         ),
         nullable=False,
     )
-    answers = Column(String, nullable=False)
+    answers = Column(Text, nullable=False)
     comment = Column(String)
 
     user = relationship('User', back_populates='applications')
