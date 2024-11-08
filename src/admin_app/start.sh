@@ -11,6 +11,7 @@ else
     cp env.py migrations/env.py
     flask db migrate
     flask db upgrade
+
     # Добавление начальных данных
     flask create_superuser hix 1
     flask create_questions
