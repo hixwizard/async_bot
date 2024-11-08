@@ -144,7 +144,8 @@ class ApplicationModelView(CustomModelView):
     form_columns = ('user_id', 'answers', 'status', 'comment')
     column_formatters = {
         'answers': lambda v, c, m, p: Markup(
-            m.answers.replace('\n', '<br>').replace('Ответ:', '<br><b>Ответ:</b><br>')
+            m.answers.replace('\n', '<br>').replace(
+                'Ответ:', '<br><b>Ответ:</b><br>'),
         ),
     }
 
