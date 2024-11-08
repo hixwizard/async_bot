@@ -10,7 +10,7 @@ from sqlalchemy import (
     Integer,
     String,
     event,
-    func,
+    func, Text,
 )
 from sqlalchemy.orm import Session, declarative_base, relationship
 from telegram import Bot
@@ -90,7 +90,7 @@ class Application(Base):
         ),
         nullable=False,
     )
-    answers = Column(String, nullable=False)
+    answers = Column(Text, nullable=False)
     comment = Column(String)
 
     user = relationship('User', back_populates='applications')

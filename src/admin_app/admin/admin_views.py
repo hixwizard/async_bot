@@ -11,6 +11,7 @@ from flask import (
 )
 from flask_admin import expose, helpers
 from flask_admin.contrib.sqla import ModelView
+from markupsafe import Markup
 
 from .forms import LoginForm
 from .utils import get_amount_opened_apps
@@ -131,6 +132,9 @@ class ApplicationModelView(CustomModelView):
         'comment': 'Комментарий',
     }
     form_columns = ('user_id', 'answers', 'status', 'comment')
+    column_formatters = {
+        'answers': lambda v, c, m, p: Markup(m.answers.replace('\n', '<br>'))
+    }
 
 
 class AppCheckStatusModelView(CustomModelView):

@@ -351,8 +351,8 @@ async def confirm_answers(update: Update, context: CallbackContext) -> None:
 
     questions = context.user_data.get('questions', [])
     answers = context.user_data.get('answers', [])
-    answers_str = "; ".join(
-        f"{q['number']}. {q['question']} Ответ: {a}"
+    answers_str = "\n".join(
+        f"{q['number']}. {q['question']}\nОтвет: {a}"
         for q, a in zip(questions, answers)
     )
 
@@ -360,7 +360,6 @@ async def confirm_answers(update: Update, context: CallbackContext) -> None:
     context.user_data['awaiting_contact'] = True
     context.user_data['answers_str'] = answers_str
     await ask_for_contact_info(update, context)
-
 
 async def edit_answers(update: Update, context: CallbackContext) -> None:
     """Отображает список вопросов для редактирования."""
