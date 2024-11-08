@@ -361,6 +361,7 @@ async def confirm_answers(update: Update, context: CallbackContext) -> None:
     context.user_data['answers_str'] = answers_str
     await ask_for_contact_info(update, context)
 
+
 async def edit_answers(update: Update, context: CallbackContext) -> None:
     """Отображает список вопросов для редактирования."""
     query = update.callback_query

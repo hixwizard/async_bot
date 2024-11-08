@@ -9,8 +9,9 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
+    Text,
     event,
-    func, Text,
+    func,
 )
 from sqlalchemy.orm import Session, declarative_base, relationship
 from telegram import Bot
