@@ -132,5 +132,5 @@ src/
 * [Александр Талбутдинов](https://github.com/Aleksandr-Talbutdinov)
 * [Артем Абрамов](https://github.com/the-world-at-large)
 * [Роман Кириллов](https://github.com/RoMario-aii)
-* Ильхам Кашапов
+* [Ильхам Кашапов](https://github.com/Ilx-k)
 * [Баринов Станислав](https://github.com/hixwizard) (тимлид)
