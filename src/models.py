@@ -142,8 +142,8 @@ class ApplicationCheckStatus(Base):
         DateTime,
         default=func.date_trunc(
             'minute',
-            func.timezone('Europe/Moscow', func.now())
-        )
+            func.timezone('Europe/Moscow', func.now()),
+        ),
     )
     user = relationship("User", secondary="applications", viewonly=True)
 
