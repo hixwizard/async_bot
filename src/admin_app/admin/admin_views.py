@@ -11,11 +11,12 @@ from flask import (
 )
 from flask_admin import expose, helpers
 from flask_admin.contrib.sqla import ModelView
+from flask_admin.form import Select2Field
 from markupsafe import Markup
 
 from .forms import LoginForm
 from .utils import get_amount_opened_apps
-
+from .cli_commands import APP_STATUSES
 
 class CustomAdminIndexView(admin.AdminIndexView):
 
@@ -127,6 +128,7 @@ class UserModelView(SuperModelView):
         'is_blocked': 'Заблокировать',
     }
     form_columns = ('id', 'name', 'email', 'phone', 'is_blocked')
+    column_editable_list = ['is_blocked']
 
 
 class ApplicationModelView(CustomModelView):
@@ -145,9 +147,17 @@ class ApplicationModelView(CustomModelView):
     column_formatters = {
         'answers': lambda v, c, m, p: Markup(
             m.answers.replace('\n', '<br>').replace(
-                'Ответ:', '<br><b>Ответ:</b><br>'),
+                'Ответ:', '<b>Ответ:</b><br>'),
         ),
     }
+    form_args = {
+        'status_id': {
+            'label': 'Статус заявки',
+            'choices': [(status, status) for status in APP_STATUSES],
+            'widget': Select2Field(),
+        }
+    }
+    column_editable_list = ['status']
 
 
 class AppCheckStatusModelView(CustomModelView):
