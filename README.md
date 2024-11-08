@@ -131,6 +131,6 @@ src/
 * [Данил Тищенко](https://github.com/tttriggered)
 * [Александр Талбутдинов](https://github.com/Aleksandr-Talbutdinov)
 * [Артем Абрамов](https://github.com/the-world-at-large)
-* [Роман](https://github.com/RoMario-aii)
+* [Роман Кириллов](https://github.com/RoMario-aii)
 * Ильхам Кашапов
 * [Баринов Станислав](https://github.com/hixwizard) (тимлид)
