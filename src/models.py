@@ -218,6 +218,7 @@ def before_flush_handler(session: Session, flush_context: any,
 
 
 class CheckIsBlocked(Base):
+
     """Модель истории блокировок пользователей."""
 
     __tablename__ = 'check_blocked'
@@ -237,7 +238,9 @@ class CheckIsBlocked(Base):
 
 
 @event.listens_for(User.is_blocked, 'set')
-def user_blocked_listener(target, value, oldvalue, initiator):
+def user_blocked_listener(target: User, value: bool,
+                          oldvalue: bool, initiator: any) -> None:
+    """Отражает заблокированного клиента в разделе 'История блокировок'."""
     if value and not oldvalue:
         session = Session.object_session(target)
         if session is not None:

@@ -7,9 +7,9 @@ from models import (
     AdminUser,
     Application,
     ApplicationCheckStatus,
+    CheckIsBlocked,
     Question,
     User,
-    CheckIsBlocked,
 )
 
 from . import app, db
@@ -17,10 +17,10 @@ from .admin_views import (
     AdminUserModelView,
     AppCheckStatusModelView,
     ApplicationModelView,
+    CheckIsBlockedModelView,
     CustomAdminIndexView,
     QuestionModelView,
     UserModelView,
-    CheckIsBlockedModelView,
 )
 
 

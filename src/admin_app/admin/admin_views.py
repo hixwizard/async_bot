@@ -191,6 +191,7 @@ class QuestionModelView(SuperModelView):
 
 
 class CheckIsBlockedModelView(CustomModelView):
+
     """Класс представления для модели CheckIsBlocked."""
 
     column_list = ('id', 'user_id', 'date')
