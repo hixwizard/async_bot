@@ -11,6 +11,7 @@ from bot import (
     start_new_survey,
 )
 from config import BOT_TOKEN
+from telegram import Update
 from telegram.ext import (
     Application as TelegramApplication,
 )
@@ -20,7 +21,6 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-from telegram import Update
 
 
 def init_bot() -> TelegramApplication:
