@@ -1,3 +1,5 @@
+![Build Status](https://github.com/Studio-Yandex-Practicum/Turutin_bot_team_2/actions/workflows/main.yml/badge.svg)
+
 ## Проект Turutin_bot
 
 **Это чат-бот, который проводит вводную часть опроса клиентов, формирует заявки и ведет журнал заявок. В проекте также присутствует административный интерфейс, где операторы и администраторы могут управлять заявками.**
@@ -22,38 +24,38 @@
 ```
 github/
 ├── workflows/
-│   └── style_check.yml # GitHub Actions для проверки стиля кода
+│   └── style_check.yml
 infra/
-├── .env.example # Пример переменных окружения
-├── docker-compose.yml # Локальный запуск с Docker
-└── docker-compose.production.yml # Запуск через CI/CD
+├── .env.example
+├── docker-compose.yml
+└── docker-compose.production.yml
 src/
 ├── admin_app/
 │   ├── admin/
 │   │   ├── templates/
 │   │   │   └── admin/
-│   │   │       ├── index.html # Главная страница админки
-│   │   │       └── my_master.html # Пользовательский шаблон
-│   ├── admin.py # Основная логика для админки
-│   ├── admin_views.py # Вьюхи для обработки запросов
-│   ├── cli_commands.py # Команды CLI для административных задач
-│   ├── forms.py # Формы для работы с данными
-│   ├── utils.py # Утилиты для вспомогательных операций
-│   └── views.py # Вьюхи для отображения данных в админке
+│   │   │       ├── index.html
+│   │   │       └── my_master.html
+│   ├── admin.py
+│   ├── admin_views.py
+│   ├── cli_commands.py
+│   ├── forms.py
+│   ├── utils.py
+│   └── views.py
 └── bot_app/
-│   ├── bot.py # Основная логика работы с ботом
-│   ├── buttons.py # Определение кнопок для интерфейса бота
-│   ├── config.py # Конфигурация для бота
-│   ├── database.py # Модуль работы с базой данных
-│   ├── main.py # Запуск бота и основной функционал
-│   └── requirements.txt # Зависимости для работы бота
-└── init.py # Инициализация пакета
-├── models.py # Модели базы данных
-├── .gitignore # Игнорируемые файлы для git
-├── .pre-commit-config.yaml # Конфигурация для pre-commit
-└── README.md # Документация проекта
-├── requirements_style.txt # Зависимости для стилистики
-└── ruff.toml # Конфигурация для Ruff
+│   ├── bot.py
+│   ├── buttons.py
+│   ├── config.py
+│   ├── database.py
+│   ├── main.py
+│   └── requirements.txt
+└── init.py
+├── models.py
+├── .gitignore
+├── .pre-commit-config.yaml
+└── README.md
+├── requirements_style.txt
+└── ruff.toml
 ```
 
 ### Описание директорий
@@ -70,7 +72,7 @@ src/
 * `cli_commands.py` — Команды CLI для административных задач.
 * `forms.py` — Формы для работы с данными.
 * `utils.py` — Утилиты для вспомогательных операций.
-* `views.py` — Вьюхи для отображения данных в админке.
+* `views.py` — Отображения данных в админке.
 
 #### bot_app/
 
@@ -124,3 +126,11 @@ src/
 * **Миграции базы данных:** Убедитесь, что все миграции выполнены. Используйте Alembic для управления миграциями.
 * **Тестирование:** Рекомендуется проводить тестирование каждого модуля перед сборкой и запуском.
 * **Логирование:** Настройте логирование для диагностики и отладки.
+
+## Состав команды
+* [Данил Тищенко](https://github.com/tttriggered)
+* [Александр Талбутдинов](https://github.com/Aleksandr-Talbutdinov)
+* [Артем Абрамов](https://github.com/the-world-at-large)
+* [Роман](https://github.com/RoMario-aii)
+* Ильхам Кашапов
+* [Баринов Станислав](https://github.com/hixwizard) (тимлид)

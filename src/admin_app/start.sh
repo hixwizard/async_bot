@@ -11,12 +11,12 @@ else
     cp env.py migrations/env.py
     flask db migrate
     flask db upgrade
-fi
 
-# Добавление начальных данных
-flask create_superuser hix 1
-flask create_questions
-flask create_statuses
+    # Добавление начальных данных
+    flask create_superuser hix 1
+    flask create_questions
+    flask create_statuses
+fi
 
 # Запуск приложения через Gunicorn на 4 процессах
 echo "Запуск Gunicorn..."

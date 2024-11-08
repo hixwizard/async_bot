@@ -351,8 +351,8 @@ async def confirm_answers(update: Update, context: CallbackContext) -> None:
 
     questions = context.user_data.get('questions', [])
     answers = context.user_data.get('answers', [])
-    answers_str = "; ".join(
-        f"{q['number']}. {q['question']} Ответ: {a}"
+    answers_str = "\n".join(
+        f"{q['number']}. {q['question']}\nОтвет: {a}"
         for q, a in zip(questions, answers)
     )
 

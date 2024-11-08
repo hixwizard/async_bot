@@ -11,7 +11,10 @@ from flask import (
 )
 from flask_admin import expose, helpers
 from flask_admin.contrib.sqla import ModelView
+from flask_admin.form import Select2Field
+from markupsafe import Markup
 
+from .cli_commands import APP_STATUSES
 from .forms import LoginForm
 from .utils import get_amount_opened_apps
 
@@ -74,6 +77,16 @@ class CustomModelView(ModelView):
         flash('Вы не авторизованы. Пожалуйста, войдите в систему.', 'error')
         return redirect(url_for('admin.index'))
 
+    @property
+    def can_create(self) -> bool:
+        """Запрещает создание для оператора."""
+        return login.current_user.role != 'operator'
+
+    @property
+    def can_delete(self) -> bool:
+        """Запрещает удаление для оператора."""
+        return login.current_user.role != 'operator'
+
 
 class SuperModelView(ModelView):
 
@@ -116,21 +129,36 @@ class UserModelView(SuperModelView):
         'is_blocked': 'Заблокировать',
     }
     form_columns = ('id', 'name', 'email', 'phone', 'is_blocked')
+    column_editable_list = ['is_blocked']
 
 
 class ApplicationModelView(CustomModelView):
 
     """Класс представления для модели Application."""
 
-    column_list = ('id', 'user_id', 'answers', 'status', 'comment')
+    column_list = ('id', 'user', 'answers', 'status', 'comment')
     column_labels = {
         'id': 'Номер заявки',
-        'user_id': 'Телеграм ID заявителя',
+        'user': 'Имя заявителя',
         'answers': 'Текст заявки',
         'status': 'Статус заявки',
         'comment': 'Комментарий',
     }
     form_columns = ('user_id', 'answers', 'status', 'comment')
+    column_formatters = {
+        'answers': lambda v, c, m, p: Markup(
+            m.answers.replace('\n', '<br>').replace(
+                'Ответ:', '<b>Ответ:</b><br>'),
+        ),
+    }
+    form_args = {
+        'status_id': {
+            'label': 'Статус заявки',
+            'choices': [(status, status) for status in APP_STATUSES],
+            'widget': Select2Field(),
+        },
+    }
+    column_editable_list = ['status', 'comment']
 
 
 class AppCheckStatusModelView(CustomModelView):

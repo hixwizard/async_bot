@@ -11,6 +11,7 @@ from bot import (
     start_new_survey,
 )
 from config import BOT_TOKEN
+from telegram import Update
 from telegram.ext import (
     Application as TelegramApplication,
 )
@@ -45,9 +46,8 @@ def init_bot() -> TelegramApplication:
     application.add_handler(CallbackQueryHandler(handle_edit_choice,
                                                  pattern=r"edit_\d+"))
     application.add_error_handler(error_handler)
-    return application
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == '__main__':
-    bot = init_bot()
-    bot.run_polling()
+    init_bot()
