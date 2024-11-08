@@ -2,7 +2,7 @@
 
 [Развёрнутый проект](https://turutin-team2.rsateam.ru)
 
-[Чат-бот](@AsyncDevBot)
+Чат-бот: `@AsyncDevBot`
 
 ## Проект Turutin_bot
 
