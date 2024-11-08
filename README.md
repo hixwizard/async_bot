@@ -1,5 +1,9 @@
 ![Build Status](https://github.com/Studio-Yandex-Practicum/Turutin_bot_team_2/actions/workflows/main.yml/badge.svg)
 
+[Развёрнутый проект](https://turutin-team2.rsateam.ru)
+
+[Чат-бот](@AsyncDevBot)
+
 ## Проект Turutin_bot
 
 **Это чат-бот, который проводит вводную часть опроса клиентов, формирует заявки и ведет журнал заявок. В проекте также присутствует административный интерфейс, где операторы и администраторы могут управлять заявками.**
