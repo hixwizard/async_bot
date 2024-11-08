@@ -9,6 +9,7 @@ from models import (
     ApplicationCheckStatus,
     Question,
     User,
+    CheckIsBlocked,
 )
 
 from . import app, db
@@ -19,6 +20,7 @@ from .admin_views import (
     CustomAdminIndexView,
     QuestionModelView,
     UserModelView,
+    CheckIsBlockedModelView,
 )
 
 
@@ -53,3 +55,5 @@ admin.add_view(ApplicationModelView(Application, db.session, name='Заявки'
 admin.add_view(AppCheckStatusModelView(ApplicationCheckStatus, db.session,
                                        name='Журнал заявок'))
 admin.add_view(QuestionModelView(Question, db.session, name='Вопросы'))
+admin.add_view(CheckIsBlockedModelView(CheckIsBlocked, db.session,
+                                       name='История блокировок'))

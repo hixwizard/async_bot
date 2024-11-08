@@ -68,6 +68,7 @@ class User(Base):
     is_blocked = Column(Boolean, default=False)
 
     applications = relationship('Application', back_populates='user')
+    block_history = relationship('CheckIsBlocked', back_populates='user')
 
     def __repr__(self) -> str:
         if self.phone:
@@ -214,3 +215,32 @@ def before_flush_handler(session: Session, flush_context: any,
     else:
         loop.run_until_complete(log_status_change(session, flush_context,
                                                   instances))
+
+
+class CheckIsBlocked(Base):
+    """Модель истории блокировок пользователей."""
+
+    __tablename__ = 'check_blocked'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(
+        String,
+        ForeignKey('users.id', name='fk_check_blocked_user_id_users'),
+        nullable=False,
+    )
+    date = Column(DateTime, default=func.now())
+
+    user = relationship('User', back_populates='block_history')
+
+    def __repr__(self) -> str:
+        return f"CheckIsBlocked(user_id='{self.user_id}', date='{self.date}')"
+
+
+@event.listens_for(User.is_blocked, 'set')
+def user_blocked_listener(target, value, oldvalue, initiator):
+    if value and not oldvalue:
+        session = Session.object_session(target)
+        if session is not None:
+            new_block_record = CheckIsBlocked(user_id=target.id)
+            session.add(new_block_record)
+            session.commit()

@@ -188,3 +188,15 @@ class QuestionModelView(SuperModelView):
         'number': 'Номер',
         'question': 'Вопрос',
     }
+
+
+class CheckIsBlockedModelView(CustomModelView):
+    """Класс представления для модели CheckIsBlocked."""
+
+    column_list = ('id', 'user_id', 'date')
+    column_labels = {
+        'id': 'ID',
+        'user_id': 'ID пользователя',
+        'date': 'Дата блокировки',
+    }
+    form_columns = ('user_id', 'date')
