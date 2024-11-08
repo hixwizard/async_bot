@@ -1,7 +1,9 @@
-name: sytle_check
+name: style_check
 
 on:
   pull_request:
+    branches-ignore:
+      - master
   push:
     branches:
       - develop
