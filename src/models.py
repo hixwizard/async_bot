@@ -9,7 +9,6 @@ from sqlalchemy import (
     ForeignKey,
     Integer,
     String,
-    Text,
     event,
     func,
 )
@@ -91,7 +90,7 @@ class Application(Base):
         ),
         nullable=False,
     )
-    answers = Column(Text, nullable=False)
+    answers = Column(String, nullable=False)
     comment = Column(String)
 
     user = relationship('User', back_populates='applications')
@@ -139,7 +138,13 @@ class ApplicationCheckStatus(Base):
     )
     old_status = Column(String, nullable=False)
     new_status = Column(String, nullable=False)
-    timestamp = Column(DateTime, default=func.date_trunc('minute', func.now()))
+    timestamp = Column(
+        DateTime,
+        default=func.date_trunc(
+            'minute',
+            func.timezone('Europe/Moscow', func.now())
+        )
+    )
     user = relationship("User", secondary="applications", viewonly=True)
 
     @property
