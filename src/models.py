@@ -70,7 +70,11 @@ class User(Base):
     applications = relationship('Application', back_populates='user')
 
     def __repr__(self) -> str:
-        return f"{self.name}"
+        if self.phone:
+            return (f'{self.name}, '
+                    f'телефон: {self.phone}')
+        return (f'{self.name}, '
+                f'эл. почта: {self.email}')
 
 
 class Application(Base):
