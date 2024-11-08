@@ -139,12 +139,12 @@ class ApplicationModelView(CustomModelView):
     column_list = ('id', 'user', 'answers', 'status', 'comment')
     column_labels = {
         'id': 'Номер заявки',
-        'user': 'Имя заявителя',
+        'user': 'Клиент',
         'answers': 'Текст заявки',
         'status': 'Статус заявки',
         'comment': 'Комментарий',
     }
-    form_columns = ('user_id', 'answers', 'status', 'comment')
+    form_columns = ('user', 'answers', 'status', 'comment')
     column_formatters = {
         'answers': lambda v, c, m, p: Markup(
             m.answers.replace('\n', '<br>').replace(
