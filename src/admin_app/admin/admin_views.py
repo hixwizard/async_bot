@@ -158,7 +158,7 @@ class ApplicationModelView(CustomModelView):
             'widget': Select2Field(),
         },
     }
-    column_editable_list = ['status']
+    column_editable_list = ['status', 'comment']
 
 
 class AppCheckStatusModelView(CustomModelView):
