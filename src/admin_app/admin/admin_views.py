@@ -75,6 +75,16 @@ class CustomModelView(ModelView):
         flash('Вы не авторизованы. Пожалуйста, войдите в систему.', 'error')
         return redirect(url_for('admin.index'))
 
+    @property
+    def can_create(self) -> bool:
+        """Запрещает создание для оператора."""
+        return login.current_user.role != 'operator'
+
+    @property
+    def can_delete(self) -> bool:
+        """Запрещает удаление для оператора."""
+        return login.current_user.role != 'operator'
+
 
 class SuperModelView(ModelView):
 
@@ -123,17 +133,19 @@ class ApplicationModelView(CustomModelView):
 
     """Класс представления для модели Application."""
 
-    column_list = ('id', 'user_id', 'answers', 'status', 'comment')
+    column_list = ('id', 'user', 'answers', 'status', 'comment')
     column_labels = {
         'id': 'Номер заявки',
-        'user_id': 'Телеграм ID заявителя',
+        'user': 'Имя заявителя',
         'answers': 'Текст заявки',
         'status': 'Статус заявки',
         'comment': 'Комментарий',
     }
     form_columns = ('user_id', 'answers', 'status', 'comment')
     column_formatters = {
-        'answers': lambda v, c, m, p: Markup(m.answers.replace('\n', '<br>')),
+        'answers': lambda v, c, m, p: Markup(
+            m.answers.replace('\n', '<br>').replace('Ответ:', '<br><b>Ответ:</b><br>')
+        ),
     }
 
 
