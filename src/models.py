@@ -1,6 +1,7 @@
 import asyncio
 import os
 
+from dotenv import load_donenv
 from sqlalchemy import (
     Boolean,
     Column,
@@ -14,6 +15,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Session, declarative_base, relationship
 from telegram import Bot
+
+load_donenv()
 
 Base = declarative_base()
 
