@@ -129,8 +129,8 @@ src/
 
 # Состав команды
 * [Данил Тищенко](https://github.com/tttriggered)
-* [Александр Таблудинов](https://github.com/Aleksandr-Talbutdinov)
-* [Artiom Abramov](https://github.com/the-world-at-large)
+* [Александр Талбутдинов](https://github.com/Aleksandr-Talbutdinov)
+* [Артем Абрамов](https://github.com/the-world-at-large)
 * [Роман](https://github.com/RoMario-aii)
 * Ильхам Кашапов
 * [Баринов Станислав](https://github.com/hixwizard) (тимлид)
