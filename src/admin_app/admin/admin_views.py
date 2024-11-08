@@ -14,9 +14,10 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.form import Select2Field
 from markupsafe import Markup
 
+from .cli_commands import APP_STATUSES
 from .forms import LoginForm
 from .utils import get_amount_opened_apps
-from .cli_commands import APP_STATUSES
+
 
 class CustomAdminIndexView(admin.AdminIndexView):
 
@@ -155,7 +156,7 @@ class ApplicationModelView(CustomModelView):
             'label': 'Статус заявки',
             'choices': [(status, status) for status in APP_STATUSES],
             'widget': Select2Field(),
-        }
+        },
     }
     column_editable_list = ['status']
 
