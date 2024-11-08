@@ -1,7 +1,9 @@
-name: Turutin Bot workflow
+name: deploy
 
 on:
   pull_request:
+    branches:
+      - master
   push:
     branches:
       - master
@@ -46,14 +48,16 @@ jobs:
       - name: Build and push admin_app image to DockerHub
         uses: docker/build-push-action@v4
         with:
-          context: ./src/admin_app/
+          context: .
+          file: ./src/admin_app/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/admin:latest
 
       - name: Build and push bot_app image to DockerHub
         uses: docker/build-push-action@v4
         with:
-          context: ./src/bot_app/
+          context: .
+          file: ./src/bot_app/Dockerfile
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/bot:latest
 
@@ -68,19 +72,22 @@ jobs:
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.HOST }}
-          key: ${{ secrets.SSH_KEY }}
-          source: "infra/docker-compose.production.yml"
-          target: "/opt/turutin/"
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
+          source: "./infra/docker-compose.production.yml"
+          target: "/opt/turutin/docker-compose.production.yml"
 
       - name: Executing remote ssh commands to deploy
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
-          key: ${{ secrets.SSH_KEY }}
+          username: ${{ secrets.USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd /opt/turutin/
-            sudo docker compose -f docker-compose.production.yml pull
-            sudo docker compose -f docker-compose.production.yml down
-            sudo docker compose -f docker-compose.production.yml up -d
-            sudo docker system prune -a
-            
+            docker compose -f docker-compose.production.yml pull
+            docker compose -f docker-compose.production.yml down
+            docker compose -f docker-compose.production.yml up -d
+            docker system prune -a
