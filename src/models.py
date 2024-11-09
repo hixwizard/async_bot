@@ -132,7 +132,7 @@ class Application(Base):
     )
     status = relationship(
         'ApplicationStatus',
-        back_populates='applications'
+        back_populates='applications',
     )
 
     def __repr__(self) -> str:
@@ -171,7 +171,7 @@ class ApplicationCheckStatus(Base, TimestampMixin):
         Integer,
         ForeignKey(
             'applications.id',
-            name='fk_check_status_application_id_applications'
+            name='fk_check_status_application_id_applications',
         ),
         nullable=False,
     )
