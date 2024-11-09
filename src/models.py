@@ -1,18 +1,20 @@
 import asyncio
 import os
+from datetime import datetime
 
 import flask_login as login
+import pytz
 from dotenv import load_dotenv
 from sqlalchemy import (
     Boolean,
     Column,
+    DateTime,
     Enum,
     ForeignKey,
     Integer,
     String,
     Text,
     event,
-    func,
 )
 from sqlalchemy.orm import Session, declarative_base, relationship
 from telegram import Bot
@@ -26,14 +28,11 @@ Base = declarative_base()
 
 class TimestampMixin:
 
-    """Определяет стандарт даты по МСК."""
+    """Mixin for defining a Moscow timezone-aware timestamp."""
 
     timestamp = Column(
-        String,
-        default=func.to_char(
-            func.timezone('Europe/Moscow', func.now()),
-            'HH24:MI DD.MM.YYYY',
-        ),
+        DateTime(timezone=True),
+        default=lambda: datetime.now(pytz.timezone('Europe/Moscow')),
     )
 
 
