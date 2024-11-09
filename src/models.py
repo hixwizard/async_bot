@@ -103,7 +103,7 @@ class User(Base):
         return f'{self.name}, {contact_info_str}'
 
 
-class Application(Base):
+class Application(Base, TimestampMixin):
 
     """Модель заявок клиента."""
 
