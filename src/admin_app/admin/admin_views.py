@@ -61,10 +61,7 @@ class CustomAdminIndexView(admin.AdminIndexView):
 
 class CustomModelView(ModelView):
 
-    """Класс представления вкладок, доступных только авторизованным.
-
-    пользователям.
-    """
+    """Вкладки, доступные только авторизованным пользователям."""
 
     def is_accessible(self) -> Response:
         """Проверяет авторизован ли пользователь."""
@@ -114,6 +111,7 @@ class AdminUserModelView(SuperModelView):
         'role': 'Роль',
     }
     form_columns = ('login', 'password', 'role')
+    column_sortable_list = ('login', 'password', 'role')
 
 
 class UserModelView(SuperModelView):
@@ -158,7 +156,8 @@ class ApplicationModelView(CustomModelView):
             'widget': Select2Field(),
         },
     }
-    column_editable_list = ['status', 'comment']
+    column_editable_list = ('status', 'comment')
+    column_sortable_list = ('id', 'answers', 'status', 'comment')
 
 
 class AppCheckStatusModelView(CustomModelView):
@@ -166,8 +165,8 @@ class AppCheckStatusModelView(CustomModelView):
     """Класс представления для модели ApplicationCheckStatus."""
 
     column_list = (
-        'changed_by', 'application_id', 'old_status', 'new_status',
-        'timestamp',
+        'application_id', 'old_status', 'new_status',
+        'timestamp', 'changed_by',
     )
     column_labels = {
         'application_id': 'Номер заявки',
@@ -179,6 +178,10 @@ class AppCheckStatusModelView(CustomModelView):
     form_columns = (
         'application_id', 'old_status', 'new_status', 'timestamp',
         'changed_by',
+    )
+    column_sortable_list = (
+        'application_id', 'old_status', 'new_status',
+        'timestamp', 'changed_by',
     )
 
 
@@ -192,14 +195,15 @@ class QuestionModelView(SuperModelView):
     }
 
 
-class CheckIsBlockedModelView(CustomModelView):
+class CheckIsBlockedModelView(SuperModelView):
 
     """Класс представления для модели CheckIsBlocked."""
 
-    column_list = ('id', 'user_id', 'date')
+    column_list = ('id', 'user_id', 'timestamp')
     column_labels = {
         'id': 'ID',
         'user_id': 'ID пользователя',
-        'date': 'Дата блокировки',
+        'timestamp': 'Дата блокировки',
     }
-    form_columns = ('user_id', 'date')
+    form_columns = ('user_id', 'timestamp')
+    column_sortable_list = ('id', 'user_id', 'timestamp')

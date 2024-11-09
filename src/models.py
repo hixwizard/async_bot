@@ -6,7 +6,6 @@ from dotenv import load_dotenv
 from sqlalchemy import (
     Boolean,
     Column,
-    DateTime,
     Enum,
     ForeignKey,
     Integer,
@@ -20,7 +19,22 @@ from telegram import Bot
 
 load_dotenv()
 
+BOT_TOKEN = os.getenv('BOT_TOKEN')
+
 Base = declarative_base()
+
+
+class TimestampMixin:
+
+    """Определяет стандарт даты по МСК."""
+
+    timestamp = Column(
+        String,
+        default=func.to_char(
+            func.timezone('Europe/Moscow', func.now()),
+            'HH24:MI DD.MM.YYYY',
+        ),
+    )
 
 
 class AdminUser(Base):
@@ -69,15 +83,24 @@ class User(Base):
     phone = Column(String)
     is_blocked = Column(Boolean, default=False)
 
-    applications = relationship('Application', back_populates='user')
-    block_history = relationship('CheckIsBlocked', back_populates='user')
+    applications = relationship(
+        'Application',
+        back_populates='user',
+    )
+    block_history = relationship(
+        'CheckIsBlocked',
+        back_populates='user',
+    )
 
     def __repr__(self) -> str:
+        """Отображает контактные данные из базы."""
+        contact_info = []
         if self.phone:
-            return (f'{self.name}, '
-                    f'телефон: {self.phone}')
-        return (f'{self.name}, '
-                f'эл. почта: {self.email}')
+            contact_info.append(f'телефон: {self.phone}')
+        if self.email:
+            contact_info.append(f'эл. почта: {self.email}')
+        contact_info_str = ', '.join(contact_info)
+        return f'{self.name}, {contact_info_str}'
 
 
 class Application(Base):
@@ -103,8 +126,14 @@ class Application(Base):
     answers = Column(Text, nullable=False)
     comment = Column(String)
 
-    user = relationship('User', back_populates='applications')
-    status = relationship('ApplicationStatus', back_populates='applications')
+    user = relationship(
+        'User',
+        back_populates='applications',
+    )
+    status = relationship(
+        'ApplicationStatus',
+        back_populates='applications',
+    )
 
     def __repr__(self) -> str:
         user_name = self.user.name if self.user else 'Unknown User'
@@ -131,7 +160,7 @@ class ApplicationStatus(Base):
         return f"{self.status}"
 
 
-class ApplicationCheckStatus(Base):
+class ApplicationCheckStatus(Base, TimestampMixin):
 
     """Модель логов изменений статусов заявок."""
 
@@ -148,13 +177,6 @@ class ApplicationCheckStatus(Base):
     )
     old_status = Column(String, nullable=False)
     new_status = Column(String, nullable=False)
-    timestamp = Column(
-        DateTime,
-        default=func.date_trunc(
-            'minute',
-            func.timezone('Europe/Moscow', func.now()),
-        ),
-    )
     changed_by = Column(String, nullable=False)
 
     user = relationship("User", secondary="applications",
@@ -172,7 +194,22 @@ class Question(Base):
     question = Column(String, nullable=False)
 
 
-BOT_TOKEN = os.getenv('BOT_TOKEN')
+class CheckIsBlocked(Base, TimestampMixin):
+
+    """Модель истории блокировок пользователей."""
+
+    __tablename__ = 'check_blocked'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(
+        String,
+        ForeignKey('users.id', name='fk_check_blocked_user_id_users'),
+        nullable=False,
+    )
+    user = relationship(
+        'User',
+        back_populates='block_history',
+    )
 
 
 async def notify_user(user_id: int, application_id: int, old_status: str,
@@ -220,26 +257,6 @@ def before_flush_handler(session: Session, flush_context: any,
     else:
         loop.run_until_complete(log_status_change(session, flush_context,
                                                   instances))
-
-
-class CheckIsBlocked(Base):
-
-    """Модель истории блокировок пользователей."""
-
-    __tablename__ = 'check_blocked'
-
-    id = Column(Integer, primary_key=True)
-    user_id = Column(
-        String,
-        ForeignKey('users.id', name='fk_check_blocked_user_id_users'),
-        nullable=False,
-    )
-    date = Column(DateTime, default=func.now())
-
-    user = relationship('User', back_populates='block_history')
-
-    def __repr__(self) -> str:
-        return f"CheckIsBlocked(user_id='{self.user_id}', date='{self.date}')"
 
 
 @event.listens_for(User.is_blocked, 'set')
