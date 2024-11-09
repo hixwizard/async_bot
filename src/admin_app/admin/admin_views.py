@@ -111,6 +111,7 @@ class AdminUserModelView(SuperModelView):
         'role': 'Роль',
     }
     form_columns = ('login', 'password', 'role')
+    column_sortable_list = ('login', 'password', 'role')
 
 
 class UserModelView(SuperModelView):
@@ -155,7 +156,8 @@ class ApplicationModelView(CustomModelView):
             'widget': Select2Field(),
         },
     }
-    column_editable_list = ['status', 'comment']
+    column_editable_list = ('status', 'comment',)
+    column_sortable_list = ('id', 'answers', 'status', 'comment')
 
 
 class AppCheckStatusModelView(CustomModelView):
@@ -163,8 +165,8 @@ class AppCheckStatusModelView(CustomModelView):
     """Класс представления для модели ApplicationCheckStatus."""
 
     column_list = (
-        'changed_by', 'application_id', 'old_status', 'new_status',
-        'timestamp',
+        'application_id', 'old_status', 'new_status',
+        'timestamp', 'changed_by'
     )
     column_labels = {
         'application_id': 'Номер заявки',
@@ -176,6 +178,10 @@ class AppCheckStatusModelView(CustomModelView):
     form_columns = (
         'application_id', 'old_status', 'new_status', 'timestamp',
         'changed_by',
+    )
+    column_sortable_list = (
+        'application_id', 'old_status', 'new_status',
+        'timestamp', 'changed_by'
     )
 
 
@@ -200,3 +206,4 @@ class CheckIsBlockedModelView(SuperModelView):
         'timestamp': 'Дата блокировки',
     }
     form_columns = ('user_id', 'timestamp')
+    column_sortable_list = ('id', 'user_id', 'timestamp')
