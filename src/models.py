@@ -1,6 +1,7 @@
 import asyncio
 import os
 
+import flask_login as login
 from dotenv import load_dotenv
 from sqlalchemy import (
     Boolean,
@@ -152,12 +153,10 @@ class ApplicationCheckStatus(Base):
             func.timezone('Europe/Moscow', func.now()),
         ),
     )
-    user = relationship("User", secondary="applications", viewonly=True)
+    changed_by = Column(String, nullable=False)
 
-    @property
-    def user_name(self) -> str:
-        """Получает имя пользователя."""
-        return self.user.name if self.user else None
+    user = relationship("User", secondary="applications",
+                        viewonly=True)
 
 
 class Question(Base):
@@ -192,10 +191,15 @@ async def log_status_change(session: Session, flush_context: any,
             new_status = instance.status.status
 
             if old_status != new_status:
+                admin_user = session.query(AdminUser).get(
+                    login.current_user.id)
+                admin_nickname = admin_user.login
+
                 log_entry = ApplicationCheckStatus(
                     application_id=instance.id,
                     old_status=old_status,
                     new_status=new_status,
+                    changed_by=admin_nickname,
                 )
                 session.add(log_entry)
 
