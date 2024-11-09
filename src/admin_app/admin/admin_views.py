@@ -61,10 +61,7 @@ class CustomAdminIndexView(admin.AdminIndexView):
 
 class CustomModelView(ModelView):
 
-    """Класс представления вкладок, доступных только авторизованным.
-
-    пользователям.
-    """
+    """Вкладки, доступные только авторизованным пользователям."""
 
     def is_accessible(self) -> Response:
         """Проверяет авторизован ли пользователь."""
@@ -192,14 +189,14 @@ class QuestionModelView(SuperModelView):
     }
 
 
-class CheckIsBlockedModelView(CustomModelView):
+class CheckIsBlockedModelView(SuperModelView):
 
     """Класс представления для модели CheckIsBlocked."""
 
-    column_list = ('id', 'user_id', 'date')
+    column_list = ('id', 'user_id', 'timestamp')
     column_labels = {
         'id': 'ID',
         'user_id': 'ID пользователя',
-        'date': 'Дата блокировки',
+        'timestamp': 'Дата блокировки',
     }
-    form_columns = ('user_id', 'date')
+    form_columns = ('user_id', 'timestamp')
