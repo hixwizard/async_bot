@@ -156,7 +156,7 @@ class ApplicationModelView(CustomModelView):
             'widget': Select2Field(),
         },
     }
-    column_editable_list = ('status', 'comment',)
+    column_editable_list = ('status', 'comment')
     column_sortable_list = ('id', 'answers', 'status', 'comment')
 
 
@@ -166,7 +166,7 @@ class AppCheckStatusModelView(CustomModelView):
 
     column_list = (
         'application_id', 'old_status', 'new_status',
-        'timestamp', 'changed_by'
+        'timestamp', 'changed_by',
     )
     column_labels = {
         'application_id': 'Номер заявки',
@@ -181,7 +181,7 @@ class AppCheckStatusModelView(CustomModelView):
     )
     column_sortable_list = (
         'application_id', 'old_status', 'new_status',
-        'timestamp', 'changed_by'
+        'timestamp', 'changed_by',
     )
 
 
