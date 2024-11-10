@@ -31,8 +31,10 @@ class TimestampMixin:
     """Mixin for defining a Moscow timezone-aware timestamp."""
 
     timestamp = Column(
-        DateTime(timezone=True),
-        default=lambda: datetime.now(pytz.timezone('Europe/Moscow')),
+        String,
+        default=lambda: datetime.now(
+            pytz.timezone('Europe/Moscow')
+        ).strftime('%H:%M %d.%m.%Y')
     )
 
 
