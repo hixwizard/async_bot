@@ -30,3 +30,6 @@ werkzeug==2.3.7
 
 # python-telegram-bot
 python-telegram-bot[Bot]==21.1
+
+# pytz
+pytz==2024.2

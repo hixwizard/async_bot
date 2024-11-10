@@ -7,6 +7,7 @@ from models import (
     AdminUser,
     Application,
     ApplicationCheckStatus,
+    CheckIsBlocked,
     Question,
     User,
 )
@@ -16,6 +17,7 @@ from .admin_views import (
     AdminUserModelView,
     AppCheckStatusModelView,
     ApplicationModelView,
+    CheckIsBlockedModelView,
     CustomAdminIndexView,
     QuestionModelView,
     UserModelView,
@@ -46,10 +48,12 @@ admin = admin.Admin(
 )
 
 # Добавление моделей в админку
-admin.add_view(AdminUserModelView(AdminUser, db.session,
-                                  name='Сотрудники'))
 admin.add_view(UserModelView(User, db.session, name='Клиенты'))
 admin.add_view(ApplicationModelView(Application, db.session, name='Заявки'))
 admin.add_view(AppCheckStatusModelView(ApplicationCheckStatus, db.session,
                                        name='Журнал заявок'))
+admin.add_view(CheckIsBlockedModelView(CheckIsBlocked, db.session,
+                                       name='Журнал блокировок'))
 admin.add_view(QuestionModelView(Question, db.session, name='Вопросы'))
+admin.add_view(AdminUserModelView(AdminUser, db.session,
+                                  name='Сотрудники'))
