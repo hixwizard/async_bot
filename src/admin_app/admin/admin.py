@@ -44,6 +44,7 @@ admin = admin.Admin(
     name='Turutin Bot',
     template_mode='bootstrap4',
     index_view=CustomAdminIndexView(name='Главная'),
+    base_template='my_master.html',
 )
 
 # Добавление моделей в админку
