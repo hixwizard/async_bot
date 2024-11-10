@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from sqlalchemy import (
     Boolean,
     Column,
+    DateTime,
     Enum,
     ForeignKey,
     Integer,
@@ -103,7 +104,7 @@ class User(Base):
         return f'{self.name}, {contact_info_str}'
 
 
-class Application(Base, TimestampMixin):
+class Application(Base):
 
     """Модель заявок клиента."""
 
@@ -133,6 +134,10 @@ class Application(Base, TimestampMixin):
     status = relationship(
         'ApplicationStatus',
         back_populates='applications',
+    )
+    timestamp = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(pytz.timezone('Europe/Moscow')),
     )
 
     def __repr__(self) -> str:
