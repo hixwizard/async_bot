@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 from sqlalchemy import (
     Boolean,
     Column,
-    DateTime,
     Enum,
     ForeignKey,
     Integer,
@@ -28,13 +27,13 @@ Base = declarative_base()
 
 class TimestampMixin:
 
-    """Mixin for defining a Moscow timezone-aware timestamp."""
+    """Задаёт формат даты."""
 
     timestamp = Column(
         String,
         default=lambda: datetime.now(
-            pytz.timezone('Europe/Moscow')
-        ).strftime('%H:%M %d.%m.%Y')
+            pytz.timezone('Europe/Moscow'),
+        ).strftime('%H:%M %d.%m.%Y'),
     )
 
 
