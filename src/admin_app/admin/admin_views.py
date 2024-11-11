@@ -128,6 +128,7 @@ class UserModelView(SuperModelView):
     }
     form_columns = ('id', 'name', 'email', 'phone', 'is_blocked')
     column_editable_list = ['is_blocked']
+    column_searchable_list = ['id']
 
 
 class ApplicationModelView(CustomModelView):
@@ -199,11 +200,18 @@ class CheckIsBlockedModelView(SuperModelView):
 
     """Класс представления для модели CheckIsBlocked."""
 
-    column_list = ('id', 'user_id', 'timestamp')
+    column_list = (
+        'id', 'user_id', 'name', 'email',
+        'phone', 'timestamp',
+    )
     column_labels = {
-        'id': 'ID',
+        'id': 'Номер',
         'user_id': 'ID пользователя',
+        'name': 'Имя',
+        'email': 'Почта',
+        'phone': 'Телефон',
         'timestamp': 'Дата блокировки',
     }
-    form_columns = ('user_id', 'timestamp')
-    column_sortable_list = ('id', 'user_id', 'timestamp')
+    column_sortable_list = (
+        'id', 'user_id', 'name', 'email', 'phone', 'timestamp',
+    )

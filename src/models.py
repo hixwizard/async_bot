@@ -216,6 +216,21 @@ class CheckIsBlocked(Base, TimestampMixin):
         back_populates='block_history',
     )
 
+    @property
+    def name(self) -> None:
+        """Получить имя пользователя."""
+        return self.user.name if self.user else None
+
+    @property
+    def email(self) -> None:
+        """Получить email пользователя."""
+        return self.user.email if self.user else None
+
+    @property
+    def phone(self) -> None:
+        """Получить телефон пользователя."""
+        return self.user.phone if self.user else None
+
 
 async def notify_user(user_id: int, application_id: int, old_status: str,
                       new_status: str) -> None:
