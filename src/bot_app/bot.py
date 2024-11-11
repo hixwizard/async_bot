@@ -10,7 +10,7 @@ from telegram import (
     InlineKeyboardMarkup,
     Update,
 )
-from telegram.ext import CallbackContext
+from telegram.ext import CallbackContext, ContextTypes
 
 from models import Application, ApplicationStatus, Question, User
 
@@ -74,6 +74,9 @@ def reset_application_data(context: CallbackContext) -> None:
 async def handle_start_button(
         update: Update, context: CallbackContext) -> None:
     """Обработка нажатия кнопки 'Создать заявку' и запуск первого вопроса."""
+    # Очищаем состояние редактирования профиля, если оно активно
+    context.user_data["is_editing_profile"] = False
+
     reset_application_data(context)
     user_id = str(update.message.from_user.id)
 
@@ -218,19 +221,19 @@ async def ask_for_contact_info(
             context.user_data['awaiting_contact'] = True
 
 
-async def start_new_survey(update: Update, context: CallbackContext) -> None:
-    """Функция для начала нового опроса после нажатия кнопки."""
-    query = update.callback_query
-    await query.answer()
-
-    context.user_data['answers'] = []
-    context.user_data['current_question'] = 0
-
-    questions = await get_questions()
-    context.user_data['questions'] = questions
-
-    if questions:
-        await query.message.reply_text(questions[0]['question'])
+# async def start_new_survey(update: Update, context: CallbackContext) -> None:
+#     """Функция для начала нового опроса после нажатия кнопки."""
+#     query = update.callback_query
+#     await query.answer()
+#
+#     context.user_data['answers'] = []
+#     context.user_data['current_question'] = 0
+#
+#     questions = await get_questions()
+#     context.user_data['questions'] = questions
+#
+#     if questions:
+#         await query.message.reply_text(questions[0]['question'])
 
 
 async def handle_question_response(
@@ -426,3 +429,104 @@ async def check_user_blocked(user_id: str, context: CallbackContext) -> bool:
         user = result.scalars().first()
         context.user_data['is_blocked'] = user.is_blocked
     return context.user_data['is_blocked']
+
+
+async def handle_my_profile(update: Update, context: CallbackContext) -> None:
+    """Отображает профиль пользователя с кнопкой для редактирования."""
+    user_id = str(update.message.from_user.id)
+    async with get_async_db_session() as session:
+        result = await session.execute(select(User).filter_by(id=user_id))
+        user = result.scalars().first()
+
+        if not user:
+            await update.message.reply_text("Пользователь не найден.")
+            return
+
+        profile_text = (f"Ваш профиль:\n\n"
+                        f"Имя: {user.name}\n"
+                        f"Email: {user.email or 'Не указан'}\n"
+                        f"Телефон: {user.phone or 'Не указан'}\n\n")
+
+        reply_markup = InlineKeyboardMarkup([
+            [InlineKeyboardButton("✏️ Редактировать",
+                                  callback_data="edit_profile")],
+        ])
+
+        await update.message.reply_text(profile_text,
+                                        reply_markup=reply_markup)
+
+
+async def handle_edit_profile(update: Update,
+                              context: CallbackContext) -> None:
+    """Отображает кнопки для выбора поля редактирования профиля."""
+    query = update.callback_query
+    await query.answer()
+
+    reply_markup = InlineKeyboardMarkup([
+        [InlineKeyboardButton("Имя", callback_data="edit_name")],
+        [InlineKeyboardButton("Email", callback_data="edit_email")],
+        [InlineKeyboardButton("Телефон", callback_data="edit_phone")],
+    ])
+
+    await query.edit_message_text("Выберите, "
+                                  "что вы хотите редактировать:",
+                                  reply_markup=reply_markup)
+
+
+async def handle_profile_edit_choice(update: Update,
+                                     context: CallbackContext) -> None:
+    """Обрабатывает выбор редактирования профиля."""
+    query = update.callback_query
+    await query.answer()
+    edit_choice = query.data.split('_')[1]
+    context.user_data['edit_choice'] = edit_choice
+
+    if edit_choice == 'name':
+        await query.edit_message_text("Введите Имя:")
+    elif edit_choice == 'email':
+        await query.edit_message_text("Введите email:")
+    elif edit_choice == 'phone':
+        await query.edit_message_text("Введите телефон:")
+
+
+async def handle_profile_update(update: Update,
+                                context: CallbackContext) -> None:
+    """Обрабатывает обновление контактной информации пользователя."""
+    if 'edit_choice' not in context.user_data:
+        return
+
+    user_id = str(update.message.from_user.id)
+    new_value = update.message.text
+    edit_choice = context.user_data.get('edit_choice')
+
+    async with get_async_db_session() as session:
+        result = await session.execute(select(User).filter_by(id=user_id))
+        user = result.scalars().first()
+
+        if not user:
+            await update.message.reply_text("Пользователь не найден.")
+            return
+
+        if edit_choice == 'name':
+            user.name = new_value
+        elif edit_choice == 'email':
+            user.email = new_value
+        elif edit_choice == 'phone':
+            user.phone = new_value
+
+        await session.commit()
+
+    await update.message.reply_text("Ваш профиль успешно обновлен.")
+    context.user_data.pop('edit_choice', None)
+
+
+async def route_message_based_on_state(update: Update,
+                                       context: ContextTypes.DEFAULT_TYPE,
+                                       ) -> None:
+    """Вызывается обработчик в зависимости от состояния пользователя."""
+    user_data = context.user_data
+
+    if user_data.get("edit_choice"):
+        await handle_profile_update(update, context)
+    else:
+        await handle_question_response(update, context)
