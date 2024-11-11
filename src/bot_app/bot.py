@@ -427,6 +427,10 @@ async def check_user_blocked(user_id: str, context: CallbackContext) -> bool:
 async def handle_my_profile(update: Update, context: CallbackContext) -> None:
     """Отображает профиль пользователя с кнопкой для редактирования."""
     user_id = str(update.message.from_user.id)
+    if await check_user_blocked(user_id, context):
+        message = await generate_message_for_blocked_user()
+        await update.message.reply_text(message)
+        return
     async with get_async_db_session() as session:
         result = await session.execute(select(User).filter_by(id=user_id))
         user = result.scalars().first()
@@ -530,9 +534,10 @@ async def generate_message_for_blocked_user() -> str:
     admin_email = None
     try:
         async with get_async_db_session() as session:
-            admin_email = await session.execute(
+            result = await session.execute(
                 select(AdminUser.email).where(AdminUser.role == 'admin'),
-            ).scalars().first()
+            )
+            admin_email = result.scalars().first()
         if admin_email:
             return ('Вы заблокированы. Обратитесь '
                     f'к администратору: {admin_email}')
