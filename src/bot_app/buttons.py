@@ -10,10 +10,3 @@ def start_keyboard() -> ReplyKeyboardMarkup:
         one_time_keyboard=True,
         resize_keyboard=True,
     )
-
-
-# def contact_keyboard() -> InlineKeyboardMarkup:
-#     """Создает кнопку для начала нового опроса."""
-#     return InlineKeyboardMarkup(
-#         [[InlineKeyboardButton("Да", callback_data="start_survey")]],
-#     )

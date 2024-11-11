@@ -35,10 +35,8 @@ def init_login() -> None:
         return db.session.query(AdminUser).get(user_id)
 
 
-# Инициализация системы работы с пользователями
 init_login()
 
-# Инициализация админки
 admin = admin.Admin(
     app,
     name='Turutin Bot',
@@ -47,7 +45,6 @@ admin = admin.Admin(
     base_template='my_master.html',
 )
 
-# Добавление моделей в админку
 admin.add_view(UserModelView(User, db.session, name='Клиенты'))
 admin.add_view(ApplicationModelView(Application, db.session, name='Заявки'))
 admin.add_view(AppCheckStatusModelView(ApplicationCheckStatus, db.session,

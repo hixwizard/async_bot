@@ -103,6 +103,13 @@
 
         // Проверяем новые заявки каждые 10 секунд
         setInterval(checkForNewApplications, 10000);
+        // Кнопка "Поиск" по ID телеграма
+        document.addEventListener("DOMContentLoaded", function() {
+            const searchButton = document.querySelector('button[type="submit"]:not([value="Search"])');
+            if (searchButton) {
+                searchButton.textContent = 'Поиск';
+            }
+        });
     </script>
     {% endif %}
 {% endblock %}
