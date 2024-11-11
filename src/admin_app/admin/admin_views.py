@@ -202,7 +202,7 @@ class CheckIsBlockedModelView(SuperModelView):
 
     column_list = (
         'id', 'user_id', 'name', 'email',
-        'phone', 'timestamp'
+        'phone', 'timestamp',
     )
     column_labels = {
         'id': 'Номер',
@@ -213,5 +213,5 @@ class CheckIsBlockedModelView(SuperModelView):
         'timestamp': 'Дата блокировки',
     }
     column_sortable_list = (
-        'id', 'user_id', 'name', 'email', 'phone', 'timestamp'
+        'id', 'user_id', 'name', 'email', 'phone', 'timestamp',
     )
