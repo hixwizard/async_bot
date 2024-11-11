@@ -98,9 +98,9 @@ class User(Base):
         """Отображает контактные данные из базы."""
         contact_info = []
         if self.phone:
-            contact_info.append(f'телефон: {self.phone}')
+            contact_info.append(self.phone)
         if self.email:
-            contact_info.append(f'эл. почта: {self.email}')
+            contact_info.append(self.email)
         contact_info_str = ', '.join(contact_info)
         return f'{self.name}, {contact_info_str}'
 
@@ -140,12 +140,6 @@ class Application(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(pytz.timezone('Europe/Moscow')),
     )
-
-    def __repr__(self) -> str:
-        user_name = self.user.name if self.user else 'Unknown User'
-        status_text = self.status.status if self.status else 'Unknown Status'
-        return (f"Application(user='{user_name}', status='{status_text}', "
-                f"answers='{self.answers}')")
 
 
 class ApplicationStatus(Base):
