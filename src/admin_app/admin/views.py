@@ -4,7 +4,6 @@ from . import app
 from .utils import get_amount_new_apps
 
 
-# Flask views
 @app.route('/')
 def index() -> Response:
     """Перенаправляет пользователя на страницу '/admin'."""

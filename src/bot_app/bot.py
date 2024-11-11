@@ -75,7 +75,6 @@ def reset_application_data(context: CallbackContext) -> None:
 async def handle_start_button(
         update: Update, context: CallbackContext) -> None:
     """Обработка нажатия кнопки 'Создать заявку' и запуск первого вопроса."""
-    # Очищаем состояние редактирования профиля, если оно активно
     context.user_data["is_editing_profile"] = False
 
     reset_application_data(context)

@@ -27,8 +27,6 @@ from telegram.ext import (
 def init_bot() -> TelegramApplication:
     """Инициализирует и настраивает Telegram-бота."""
     application = TelegramApplication.builder().token(BOT_TOKEN).build()
-
-    # Обработчики команд
     application.add_handler(CommandHandler("start", start))
     application.add_handler(
         CommandHandler("my_applications", handle_my_applications))
@@ -38,14 +36,8 @@ def init_bot() -> TelegramApplication:
         MessageHandler(filters.Regex('^Мои заявки$'), handle_my_applications))
     application.add_handler(
         MessageHandler(filters.Regex('^Мой профиль$'), handle_my_profile))
-
-    # Главный обработчик для текстовых сообщений
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,
                                            route_message_based_on_state))
-
-    # Обработчики для коллбэков
-    # application.add_handler(
-    #     CallbackQueryHandler(start_new_survey, pattern="start_survey"))
     application.add_handler(
         CallbackQueryHandler(confirm_answers, pattern="confirm_answers"))
     application.add_handler(
