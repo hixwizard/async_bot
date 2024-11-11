@@ -2,6 +2,7 @@ import logging
 
 from buttons import start_keyboard
 from database import get_async_db_session
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from telegram import (
@@ -12,7 +13,7 @@ from telegram import (
 )
 from telegram.ext import CallbackContext, ContextTypes
 
-from models import Application, ApplicationStatus, Question, User
+from models import AdminUser, Application, ApplicationStatus, Question, User
 
 
 async def get_questions() -> list[dict]:
@@ -81,6 +82,8 @@ async def handle_start_button(
     user_id = str(update.message.from_user.id)
 
     if await check_user_blocked(user_id, context):
+        message = await generate_message_for_blocked_user()
+        await update.message.reply_text(message)
         return
 
     questions = await get_questions()
@@ -142,6 +145,8 @@ async def handle_contact_info(
     """Обработка контактной информации пользователя и завершение заявки."""
     user_id = str(update.message.from_user.id)
     if await check_user_blocked(user_id, context):
+        message = await generate_message_for_blocked_user()
+        await update.message.reply_text(message)
         return
 
     if not context.user_data.get('awaiting_contact'):
@@ -221,21 +226,6 @@ async def ask_for_contact_info(
             context.user_data['awaiting_contact'] = True
 
 
-# async def start_new_survey(update: Update, context: CallbackContext) -> None:
-#     """Функция для начала нового опроса после нажатия кнопки."""
-#     query = update.callback_query
-#     await query.answer()
-#
-#     context.user_data['answers'] = []
-#     context.user_data['current_question'] = 0
-#
-#     questions = await get_questions()
-#     context.user_data['questions'] = questions
-#
-#     if questions:
-#         await query.message.reply_text(questions[0]['question'])
-
-
 async def handle_question_response(
         update: Update, context: CallbackContext) -> None:
     """Обрабатывает ответ пользователя на вопрос."""
@@ -244,6 +234,8 @@ async def handle_question_response(
         return
 
     if await check_user_blocked(user_id, context):
+        message = await generate_message_for_blocked_user()
+        await update.message.reply_text(message)
         return
 
     if context.user_data.get('awaiting_edit_selection', False):
@@ -296,6 +288,8 @@ async def handle_my_applications(
     user_id = str(update.message.from_user.id)
 
     if await check_user_blocked(user_id, context):
+        message = await generate_message_for_blocked_user()
+        await update.message.reply_text(message)
         return
 
     applications_text = "Ваши заявки:\n"
@@ -530,3 +524,21 @@ async def route_message_based_on_state(update: Update,
         await handle_profile_update(update, context)
     else:
         await handle_question_response(update, context)
+
+
+async def generate_message_for_blocked_user() -> str:
+    """Генерирует сообщение для заблокированного пользователя."""
+    admin_email = None
+    try:
+        async with get_async_db_session() as session:
+            admin_email = await session.execute(
+                select(AdminUser.email).where(AdminUser.role == 'admin'),
+            ).scalars().first()
+        if admin_email:
+            return ('Вы заблокированы. Обратитесь '
+                    f'к администратору: {admin_email}')
+        return 'Вы заблокированы. Обратитесь к администратору.'
+
+    except SQLAlchemyError as e:
+        logging.error(f'Ошибка при выполнении запроса к БД: {e}')
+        return 'Вы заблокированы. Обратитесь к администратору.'
