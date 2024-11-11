@@ -108,10 +108,11 @@ class AdminUserModelView(SuperModelView):
     column_labels = {
         'login': 'Логин',
         'password': 'Пароль',
+        'email': 'Электронная почта',
         'role': 'Роль',
     }
-    form_columns = ('login', 'password', 'role')
-    column_sortable_list = ('login', 'password', 'role')
+    form_columns = ('login', 'password', 'email', 'role')
+    column_sortable_list = ('login', 'password', 'email', 'role')
 
 
 class UserModelView(SuperModelView):

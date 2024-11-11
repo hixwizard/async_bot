@@ -47,6 +47,7 @@ class AdminUser(Base):
     id = Column(Integer, primary_key=True)
     login = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False)
+    email = Column(String, unique=True)
     role = Column(
         Enum('admin', 'operator', name='admin_role_enum'),
         default='admin',
