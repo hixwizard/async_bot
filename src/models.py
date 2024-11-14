@@ -88,10 +88,12 @@ class User(Base):
     applications = relationship(
         'Application',
         back_populates='user',
+        cascade="all, delete",
     )
     block_history = relationship(
         'CheckIsBlocked',
         back_populates='user',
+        cascade="all, delete",
     )
 
     def __repr__(self) -> str:
@@ -115,7 +117,6 @@ class Application(Base):
     user_id = Column(
         String,
         ForeignKey('users.id', name='fk_applications_user_id_users'),
-        nullable=False,
     )
     status_id = Column(
         Integer,
@@ -123,7 +124,6 @@ class Application(Base):
             'statuses.id',
             name='fk_applications_status_id_statuses',
         ),
-        nullable=False,
     )
     answers = Column(Text, nullable=False)
     comment = Column(String)
@@ -139,6 +139,11 @@ class Application(Base):
     timestamp = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(pytz.timezone('Europe/Moscow')),
+    )
+    check_statuses = relationship(
+        'ApplicationCheckStatus',
+        backref='application',
+        cascade="all, delete",
     )
 
 
@@ -204,7 +209,6 @@ class CheckIsBlocked(Base, TimestampMixin):
     user_id = Column(
         String,
         ForeignKey('users.id', name='fk_check_blocked_user_id_users'),
-        nullable=False,
     )
     user = relationship(
         'User',
