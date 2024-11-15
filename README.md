@@ -1,5 +1,4 @@
-![Build Status](https://github.com/Studio-Yandex-Practicum/Turutin_bot_team_2/actions/workflows/main.yml/badge.svg)
-
+![Build Status](https://github.com/Studio-Yandex-Practicum/Turutin_bot_team_2/actions/workflows/main.yml/badge.svg?branch=master)
 [Развёрнутый проект](https://turutin-team2.rsateam.ru)
 
 Чат-бот: `@AsyncDevBot`
