@@ -1,6 +1,31 @@
 import logging
 
 from buttons import start_keyboard
+from constants import (
+    ASK_FOR_CONTACTS,
+    BLOCK_MASSAGE,
+    CHOOSE_EDIT_OR_OK,
+    CHOOSE_EDIT_QUESTION,
+    CHOOSE_TO_EDIT,
+    DEFAULT_STATUS,
+    EMPTY,
+    FIRST_QUESTION,
+    HAVENT_ANSWERS,
+    HAVENT_APPLICATION,
+    HAVENT_QUESTIONS,
+    MESSAGE_NOT_FOUND,
+    NEXT_NUMBER,
+    NEXT_QUESTION,
+    NOTHING_TO_EDIT,
+    PROFILE_UPDATED,
+    QUESTION_NOT_FOUND,
+    SELECTED_FIELD,
+    SUCCESSFUL_EDIT,
+    SUCCESSFUL_SAVE,
+    TAP_TO_CONTINIUE,
+    USER_NOT_FOUND,
+    WELCOME,
+)
 from database import get_async_db_session
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.future import select
@@ -14,15 +39,6 @@ from telegram import (
 from telegram.ext import CallbackContext, ContextTypes
 
 from models import AdminUser, Application, ApplicationStatus, Question, User
-from constants import (
-    WELCOME, HAVENT_QUESTIONS, FIRST_QUESTION, MESSAGE_NOT_FOUND,
-    NEXT_QUESTION, DEFAULT_STATUS, SUCCESSFUL_SAVE, NEXT_NUMBER,
-    ASK_FOR_CONTACTS, CHOOSE_EDIT_QUESTION, CHOOSE_EDIT_OR_OK,
-    TAP_TO_CONTINIUE, HAVENT_APPLICATION, HAVENT_ANSWERS, EMPTY,
-    SUCCESSFUL_EDIT, NOTHING_TO_EDIT, QUESTION_NOT_FOUND,
-    CHOOSE_TO_EDIT, SELECTED_FIELD, PROFILE_UPDATED, BLOCK_MASSAGE,
-    USER_NOT_FOUND
-)
 
 
 async def get_questions() -> list[dict]:
@@ -226,7 +242,7 @@ async def ask_for_contact_info(
         if user_record and (user_record.email or user_record.phone):
             await finalize_application(update, context)
         else:
-            await update.effective_chat.send_message(ASK_FOR_CONTACTS,)
+            await update.effective_chat.send_message(ASK_FOR_CONTACTS)
             context.user_data['awaiting_contact'] = True
 
 
@@ -243,11 +259,11 @@ async def handle_question_response(
         return
 
     if context.user_data.get('awaiting_edit_selection', False):
-        await update.message.reply_text(CHOOSE_EDIT_QUESTION,)
+        await update.message.reply_text(CHOOSE_EDIT_QUESTION)
         return
 
     if context.user_data.get('awaiting_confirmation', False):
-        await update.message.reply_text(CHOOSE_EDIT_OR_OK,)
+        await update.message.reply_text(CHOOSE_EDIT_OR_OK)
         return
 
     if 'editing_question' in context.user_data:
@@ -271,7 +287,7 @@ async def handle_question_response(
         else:
             await ask_for_contact_info(update, context)
     else:
-        await update.message.reply_text(TAP_TO_CONTINIUE,)
+        await update.message.reply_text(TAP_TO_CONTINIUE)
 
 
 async def error_handler(update: Update, context: CallbackContext) -> None:
@@ -383,7 +399,7 @@ async def edit_answers(update: Update, context: CallbackContext) -> None:
 async def ask_next_question(update: Update, context: CallbackContext) -> None:
     """Выдаёт следующий вопрос из списка или показывает сводку."""
     current_question_index = context.user_data.get(
-        'current_question', FIRST_QUESTION
+        'current_question', FIRST_QUESTION,
     )
     questions = context.user_data.get('questions', [])
 
