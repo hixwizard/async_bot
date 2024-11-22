@@ -1,11 +1,11 @@
 from typing import Optional
 
-from .constants import messages
 from wtforms import Field, fields, form, validators
 
 from models import AdminUser
 
 from . import db
+from .constants import messages
 
 
 class LoginForm(form.Form):
