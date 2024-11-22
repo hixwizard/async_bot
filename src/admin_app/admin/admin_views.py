@@ -14,7 +14,7 @@ from flask_admin.contrib.sqla import ModelView
 from flask_admin.form import Select2Field
 from markupsafe import Markup
 
-from .cli_commands import APP_STATUSES
+from .constants import APP_STATUSES, messages
 from .forms import LoginForm
 from .utils import get_amount_opened_apps
 
@@ -36,7 +36,7 @@ class CustomAdminIndexView(admin.AdminIndexView):
         if not login.current_user.is_authenticated:
             return redirect(url_for(".login_view"))
         amount = get_amount_opened_apps()
-        flash(f'Количество заявок в статусе "открыта": {amount}', 'info')
+        flash(messages.AMOUNT_OPENED_APPS.format(amount=amount), 'info')
         return super().index()
 
     @expose("/login/", methods=("GET", "POST"))
@@ -55,16 +55,13 @@ class CustomAdminIndexView(admin.AdminIndexView):
     def logout_view(self) -> Response:
         """Определяет логику выхода пользователя из системы."""
         login.logout_user()
-        flash('Вы вышли из системы.', 'error')
+        flash(messages.LOG_OUT, 'error')
         return redirect(url_for(".index"))
 
 
 class CustomModelView(ModelView):
 
-    """Класс представления вкладок, доступных только авторизованным.
-
-    пользователям.
-    """
+    """Вкладки, доступные только авторизованным пользователям."""
 
     def is_accessible(self) -> Response:
         """Проверяет авторизован ли пользователь."""
@@ -74,7 +71,7 @@ class CustomModelView(ModelView):
             self, name: str, **kwargs: Dict[str, Any],
     ) -> Response:
         """Перенаправляет пользователя на страницу '/admin'."""
-        flash('Вы не авторизованы. Пожалуйста, войдите в систему.', 'error')
+        flash(messages.NOT_ACCESS, 'error')
         return redirect(url_for('admin.index'))
 
     @property
@@ -111,9 +108,11 @@ class AdminUserModelView(SuperModelView):
     column_labels = {
         'login': 'Логин',
         'password': 'Пароль',
+        'email': 'Электронная почта',
         'role': 'Роль',
     }
-    form_columns = ('login', 'password', 'role')
+    form_columns = ('login', 'password', 'email', 'role')
+    column_sortable_list = ('login', 'password', 'email', 'role')
 
 
 class UserModelView(SuperModelView):
@@ -130,6 +129,7 @@ class UserModelView(SuperModelView):
     }
     form_columns = ('id', 'name', 'email', 'phone', 'is_blocked')
     column_editable_list = ['is_blocked']
+    column_searchable_list = ['id']
 
 
 class ApplicationModelView(CustomModelView):
@@ -158,7 +158,8 @@ class ApplicationModelView(CustomModelView):
             'widget': Select2Field(),
         },
     }
-    column_editable_list = ['status', 'comment']
+    column_editable_list = ('status', 'comment')
+    column_sortable_list = ('id', 'answers', 'status', 'comment')
 
 
 class AppCheckStatusModelView(CustomModelView):
@@ -166,17 +167,23 @@ class AppCheckStatusModelView(CustomModelView):
     """Класс представления для модели ApplicationCheckStatus."""
 
     column_list = (
-        'id', 'application_id', 'old_status', 'new_status', 'timestamp',
+        'application_id', 'old_status', 'new_status',
+        'timestamp', 'changed_by',
     )
     column_labels = {
-        'id': 'Номер в журнале',
         'application_id': 'Номер заявки',
         'old_status': 'Старый статус',
         'new_status': 'Новый статус',
         'timestamp': 'Дата изменений',
+        'changed_by': 'Изменил',
     }
     form_columns = (
         'application_id', 'old_status', 'new_status', 'timestamp',
+        'changed_by',
+    )
+    column_sortable_list = (
+        'application_id', 'old_status', 'new_status',
+        'timestamp', 'changed_by',
     )
 
 
@@ -188,3 +195,24 @@ class QuestionModelView(SuperModelView):
         'number': 'Номер',
         'question': 'Вопрос',
     }
+
+
+class CheckIsBlockedModelView(SuperModelView):
+
+    """Класс представления для модели CheckIsBlocked."""
+
+    column_list = (
+        'id', 'user_id', 'name', 'email',
+        'phone', 'timestamp',
+    )
+    column_labels = {
+        'id': 'Номер',
+        'user_id': 'ID пользователя',
+        'name': 'Имя',
+        'email': 'Почта',
+        'phone': 'Телефон',
+        'timestamp': 'Дата блокировки',
+    }
+    column_sortable_list = (
+        'id', 'user_id', 'name', 'email', 'phone', 'timestamp',
+    )
