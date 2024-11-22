@@ -1,7 +1,7 @@
 import logging
 
 
-def bot_logger():
+def bot_logger() -> logging.Logger:
     log_file_path = 'logging_exception.log'
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     logger = logging.getLogger(__name__)
