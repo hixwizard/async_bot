@@ -3,7 +3,7 @@ import logging
 from buttons import start_keyboard
 from constants import (
     ASK_FOR_CONTACTS,
-    BLOCK_MASSAGE,
+    BLOCK_MESSAGE,
     CHOOSE_EDIT_OR_OK,
     CHOOSE_EDIT_QUESTION,
     CHOOSE_TO_EDIT,
@@ -17,7 +17,7 @@ from constants import (
     NEXT_NUMBER,
     NEXT_QUESTION,
     NOTHING_TO_EDIT,
-    NOT_CPECIFIED,
+    NOT_SPECIFIED,
     PROFILE_UPDATED,
     QUESTION_NOT_FOUND,
     SELECTED_FIELD,
@@ -458,8 +458,8 @@ async def handle_my_profile(update: Update, context: CallbackContext) -> None:
 
         profile_text = (f"Ваш профиль:\n\n"
                         f"Имя: {user.name}\n"
-                        f"Email: {user.email or NOT_CPECIFIED}\n"
-                        f"Телефон: {user.phone or NOT_CPECIFIED}\n\n")
+                        f"Email: {user.email or NOT_SPECIFIED}\n"
+                        f"Телефон: {user.phone or NOT_SPECIFIED}\n\n")
 
         reply_markup = InlineKeyboardMarkup([
             [InlineKeyboardButton("✏️ Редактировать",
@@ -555,9 +555,9 @@ async def generate_message_for_blocked_user() -> str:
             )
             admin_email = result.scalars().first()
         if admin_email:
-            return (f'{BLOCK_MASSAGE} {admin_email}')
-        return BLOCK_MASSAGE
+            return (f'{BLOCK_MESSAGE} {admin_email}')
+        return BLOCK_MESSAGE
 
     except SQLAlchemyError as e:
         logging.error(f'Ошибка при выполнении запроса к БД: {e}')
-        return BLOCK_MASSAGE
+        return BLOCK_MESSAGE
