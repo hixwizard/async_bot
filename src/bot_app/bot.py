@@ -1,4 +1,4 @@
-import logging
+from telegram.ext import CallbackContext
 
 from buttons import start_keyboard
 from database import get_async_db_session
@@ -10,9 +10,10 @@ from telegram import (
     InlineKeyboardMarkup,
     Update,
 )
-from telegram.ext import CallbackContext
-
 from models import Application, ApplicationStatus, Question, User
+from logger import bot_logger
+
+logger = bot_logger()
 
 
 async def get_questions() -> list[dict]:
@@ -284,7 +285,7 @@ async def handle_question_response(
 
 async def error_handler(update: Update, context: CallbackContext) -> None:
     """Обрабатывает ошибки, возникающие при обработке обновлений Telegram."""
-    logging.error(f"Update {update} caused error {context.error}")
+    logger.error(f"Update {update} caused error {context.error}")
 
 
 async def handle_my_applications(
