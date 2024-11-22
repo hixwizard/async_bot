@@ -17,6 +17,7 @@ from constants import (
     NEXT_NUMBER,
     NEXT_QUESTION,
     NOTHING_TO_EDIT,
+    NOT_CPECIFIED,
     PROFILE_UPDATED,
     QUESTION_NOT_FOUND,
     SELECTED_FIELD,
@@ -25,7 +26,6 @@ from constants import (
     TAP_TO_CONTINIUE,
     USER_NOT_FOUND,
     WELCOME,
-    NOT_CPECIFIED
 )
 from database import get_async_db_session
 from sqlalchemy.exc import SQLAlchemyError
