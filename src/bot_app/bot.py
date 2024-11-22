@@ -1,7 +1,6 @@
-from telegram.ext import CallbackContext
-
 from buttons import start_keyboard
 from database import get_async_db_session
+from logger import bot_logger
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
 from telegram import (
@@ -10,8 +9,9 @@ from telegram import (
     InlineKeyboardMarkup,
     Update,
 )
+from telegram.ext import CallbackContext
+
 from models import Application, ApplicationStatus, Question, User
-from logger import bot_logger
 
 logger = bot_logger()
 
