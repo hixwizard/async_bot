@@ -21,3 +21,4 @@ SELECTED_FIELD: int = 1
 PROFILE_UPDATED: str = 'Ваш профиль успешно обновлен.'
 BLOCK_MASSAGE: str = 'Вы заблокированы. Обратитесь к администратору. '
 USER_NOT_FOUND: str = 'Пользователь не найден.'
+NOT_CPECIFIED: str = 'Не задано'

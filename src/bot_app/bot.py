@@ -25,6 +25,7 @@ from constants import (
     TAP_TO_CONTINIUE,
     USER_NOT_FOUND,
     WELCOME,
+    NOT_CPECIFIED
 )
 from database import get_async_db_session
 from sqlalchemy.exc import SQLAlchemyError
@@ -319,7 +320,7 @@ async def handle_my_applications(
             await update.message.reply_text(HAVENT_APPLICATION)
             return
 
-        for index, app in enumerate(applications, start=1):
+        for index, app in enumerate(applications, start=NEXT_QUESTION):
             applications_text += (f"Номер: {index}\n"
                                   f"Статус: {app.status.status}\n\n")
 
@@ -337,7 +338,7 @@ async def summarize_answers(update: Update, context: CallbackContext) -> None:
 
     summary_text = "Проверьте свои ответы:\n\n"
     for idx, question in enumerate(questions):
-        answer = answers[idx] if idx < len(answers) else ''
+        answer = answers[idx] if idx < len(answers) else EMPTY
         summary_text += (f"{question['number']}. {question['question']}\n"
                          f"Ответ: {answer}\n\n")
 
@@ -457,8 +458,8 @@ async def handle_my_profile(update: Update, context: CallbackContext) -> None:
 
         profile_text = (f"Ваш профиль:\n\n"
                         f"Имя: {user.name}\n"
-                        f"Email: {user.email or EMPTY}\n"
-                        f"Телефон: {user.phone or EMPTY}\n\n")
+                        f"Email: {user.email or NOT_CPECIFIED}\n"
+                        f"Телефон: {user.phone or NOT_CPECIFIED}\n\n")
 
         reply_markup = InlineKeyboardMarkup([
             [InlineKeyboardButton("✏️ Редактировать",
