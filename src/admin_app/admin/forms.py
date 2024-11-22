@@ -1,5 +1,6 @@
 from typing import Optional
 
+from .constants import messages
 from wtforms import Field, fields, form, validators
 
 from models import AdminUser
@@ -25,11 +26,11 @@ class LoginForm(form.Form):
         user = self.get_user()
         if user is None:
             raise validators.ValidationError(
-                'Такой пользователь не зарегистрирован',
+                messages.UNREGISTERED_USER,
             )
         if user.password != self.password.data:
             raise validators.ValidationError(
-                'Неверный пароль, повторите попытку',
+                messages.INVALID_PASSWORD,
             )
 
     def get_user(self) -> Optional[AdminUser]:
