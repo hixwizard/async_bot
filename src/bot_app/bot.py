@@ -1,3 +1,5 @@
+import re
+
 from buttons import start_keyboard
 from constants import (
     ASK_FOR_CONTACTS,
@@ -11,7 +13,9 @@ from constants import (
     HAVENT_ANSWERS,
     HAVENT_APPLICATION,
     HAVENT_QUESTIONS,
-    MESSAGE_NOT_FOUND,
+    INVALID_CONTACT_FORMAT_MSG,
+    INVALID_EMAIL_FORMAT,
+    INVALID_PHONE_FORMAT,
     NEXT_NUMBER,
     NEXT_QUESTION,
     NOTHING_TO_EDIT,
@@ -22,6 +26,7 @@ from constants import (
     SUCCESSFUL_EDIT,
     SUCCESSFUL_SAVE,
     TAP_TO_CONTINIUE,
+    UNKNOWN_FIELD_FOR_EDIT,
     USER_NOT_FOUND,
     WELCOME,
 )
@@ -123,17 +128,13 @@ async def handle_start_button(
         await update.message.reply_text(HAVENT_QUESTIONS)
 
 
-async def process_application(
-        update: Update, context: CallbackContext) -> None:
+async def process_application(update: Update,
+                              context: CallbackContext) -> None:
     """Сохраняет ответ пользователя и переходит к следующему вопросу."""
     if 'answers' not in context.user_data:
         context.user_data['answers'] = []
-    if update.message:
-        context.user_data['answers'].append(update.message.text)
-    else:
-        await update.message.reply_text(MESSAGE_NOT_FOUND)
-        return
 
+    context.user_data['answers'].append(update.message.text)
     context.user_data['current_question'] += NEXT_QUESTION
     await ask_next_question(update, context)
 
@@ -184,10 +185,15 @@ async def handle_contact_info(
         user_record = result.scalars().first()
 
         if user_record:
-            if "@" in contact_info:
-                user_record.email = contact_info
-            else:
-                user_record.phone = contact_info
+            match contact_info:
+                case email if is_valid_email(email):
+                    user_record.email = email
+                case phone if is_valid_phone(phone):
+                    user_record.phone = phone
+                case _:
+                    await update.message.reply_text(INVALID_CONTACT_FORMAT_MSG)
+                    return
+
             await session.commit()
 
     context.user_data['awaiting_contact'] = False
@@ -226,7 +232,7 @@ async def finalize_application(
         await session.commit()
 
     await update.effective_chat.send_message(
-        f"{SUCCESSFUL_SAVE} Номер вашей заявки:{application_number}",
+        f"{SUCCESSFUL_SAVE} Номер вашей заявки: {application_number}",
     )
     context.user_data['survey_completed'] = True
     context.user_data['awaiting_contact'] = False
@@ -241,17 +247,23 @@ async def ask_for_contact_info(
         result = await session.execute(select(User).filter_by(id=user_id))
         user_record = result.scalars().first()
 
-        if user_record and (user_record.email or user_record.phone):
-            await finalize_application(update, context)
-        else:
-            await update.effective_chat.send_message(ASK_FOR_CONTACTS)
-            context.user_data['awaiting_contact'] = True
+        match user_record:
+            case None:
+                await update.effective_chat.send_message(
+                    "Пользователь не найден.")
+                return
+            case _ if user_record.email or user_record.phone:
+                await finalize_application(update, context)
+            case _:
+                await update.effective_chat.send_message(ASK_FOR_CONTACTS)
+                context.user_data['awaiting_contact'] = True
 
 
 async def handle_question_response(
         update: Update, context: CallbackContext) -> None:
     """Обрабатывает ответ пользователя на вопрос."""
     user_id = str(update.message.from_user.id)
+
     if context.user_data.get('survey_completed', False):
         return
 
@@ -260,36 +272,38 @@ async def handle_question_response(
         await update.message.reply_text(message)
         return
 
-    if context.user_data.get('awaiting_edit_selection', False):
-        await update.message.reply_text(CHOOSE_EDIT_QUESTION)
-        return
+    match context.user_data:
+        case data if data.get('awaiting_edit_selection', False):
+            await update.message.reply_text(CHOOSE_EDIT_QUESTION)
+            return
 
-    if context.user_data.get('awaiting_confirmation', False):
-        await update.message.reply_text(CHOOSE_EDIT_OR_OK)
-        return
+        case data if data.get('awaiting_confirmation', False):
+            await update.message.reply_text(CHOOSE_EDIT_OR_OK)
+            return
 
-    if 'editing_question' in context.user_data:
-        question_number = context.user_data.pop('editing_question')
-        answers = context.user_data.get('answers', [])
-        answers[question_number - NEXT_NUMBER] = update.message.text
-        context.user_data['answers'] = answers
+        case data if 'editing_question' in data:
+            question_number = context.user_data.pop('editing_question')
+            answers = context.user_data.get('answers', [])
+            answers[question_number - NEXT_NUMBER] = update.message.text
+            context.user_data['answers'] = answers
+            await summarize_answers(update, context)
+            return
 
-        await summarize_answers(update, context)
-        return
+        case data if data.get('awaiting_contact', False):
+            await handle_contact_info(update, context)
+            return
 
-    if context.user_data.get('awaiting_contact', False):
-        await handle_contact_info(update, context)
-        return
+        case data if 'current_question' in data:
+            question_index = data['current_question']
+            questions = data['questions']
+            if question_index < len(questions):
+                await process_application(update, context)
+            else:
+                await ask_for_contact_info(update, context)
+            return
 
-    if 'current_question' in context.user_data:
-        question_index = context.user_data['current_question']
-        questions = context.user_data['questions']
-        if question_index < len(questions):
-            await process_application(update, context)
-        else:
-            await ask_for_contact_info(update, context)
-    else:
-        await update.message.reply_text(TAP_TO_CONTINIUE)
+        case _:
+            await update.message.reply_text(TAP_TO_CONTINIUE)
 
 
 async def error_handler(update: Update, context: CallbackContext) -> None:
@@ -307,8 +321,6 @@ async def handle_my_applications(
         await update.message.reply_text(message)
         return
 
-    applications_text = "Ваши заявки:\n"
-
     async with get_async_db_session() as session:
         result = await session.execute(
             select(Application)
@@ -317,15 +329,15 @@ async def handle_my_applications(
         )
         applications = result.scalars().all()
 
-        if not applications:
+    match applications:
+        case []:
             await update.message.reply_text(HAVENT_APPLICATION)
-            return
-
-        for index, app in enumerate(applications, start=NEXT_QUESTION):
-            applications_text += (f"Номер: {index}\n"
-                                  f"Статус: {app.status.status}\n\n")
-
-        await update.message.reply_text(applications_text)
+        case _:
+            applications_text = "Ваши заявки:\n"
+            for index, app in enumerate(applications, start=NEXT_QUESTION):
+                applications_text += (f"Номер: {index}\n"
+                                      f"Статус: {app.status.status}\n\n")
+            await update.message.reply_text(applications_text)
 
 
 async def summarize_answers(update: Update, context: CallbackContext) -> None:
@@ -487,24 +499,25 @@ async def handle_edit_profile(update: Update,
                                   reply_markup=reply_markup)
 
 
-async def handle_profile_edit_choice(update: Update,
-                                     context: CallbackContext) -> None:
+async def handle_profile_edit_choice(
+        update: Update, context: CallbackContext) -> None:
     """Обрабатывает выбор редактирования профиля."""
     query = update.callback_query
     await query.answer()
     edit_choice = query.data.split('_')[SELECTED_FIELD]
     context.user_data['edit_choice'] = edit_choice
 
-    if edit_choice == 'name':
-        await query.edit_message_text("Введите Имя:")
-    elif edit_choice == 'email':
-        await query.edit_message_text("Введите email:")
-    elif edit_choice == 'phone':
-        await query.edit_message_text("Введите телефон:")
+    match edit_choice:
+        case 'name':
+            await query.edit_message_text("Введите Имя:")
+        case 'email':
+            await query.edit_message_text("Введите email:")
+        case 'phone':
+            await query.edit_message_text("Введите телефон:")
 
 
-async def handle_profile_update(update: Update,
-                                context: CallbackContext) -> None:
+async def handle_profile_update(
+        update: Update, context: CallbackContext) -> None:
     """Обрабатывает обновление контактной информации пользователя."""
     if 'edit_choice' not in context.user_data:
         return
@@ -521,17 +534,37 @@ async def handle_profile_update(update: Update,
             await update.message.reply_text(USER_NOT_FOUND)
             return
 
-        if edit_choice == 'name':
-            user.name = new_value
-        elif edit_choice == 'email':
-            user.email = new_value
-        elif edit_choice == 'phone':
-            user.phone = new_value
+        match edit_choice:
+            case 'name':
+                user.name = new_value
+            case 'email':
+                if not is_valid_email(new_value):
+                    await update.message.reply_text(INVALID_EMAIL_FORMAT)
+                    return
+                user.email = new_value
+            case 'phone':
+                if not is_valid_phone(new_value):
+                    await update.message.reply_text(INVALID_PHONE_FORMAT)
+                    return
+                user.phone = new_value
+            case _:
+                await update.message.reply_text(UNKNOWN_FIELD_FOR_EDIT)
+                return
 
         await session.commit()
 
     await update.message.reply_text(PROFILE_UPDATED)
     context.user_data.pop('edit_choice', None)
+
+
+def is_valid_email(email: str) -> bool:
+    """Проверяет, является ли строка email действительным адресом эл. почты."""
+    return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
+
+
+def is_valid_phone(phone: str) -> bool:
+    """Проверяет, является ли строка телеф. номером в допустимом формате."""
+    return re.match(r"^\+?\d{10,15}$", phone) is not None
 
 
 async def route_message_based_on_state(update: Update,
