@@ -1,4 +1,3 @@
-import logging
 import re
 
 from buttons import start_keyboard
