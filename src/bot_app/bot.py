@@ -68,7 +68,7 @@ def reset_application_data(context: CallbackContext) -> None:
     keys_to_delete = [
         'answers', 'current_question', 'questions', 'started',
         'awaiting_contact', 'awaiting_confirmation',
-        'editing_question', 'answers_str', 'survey_completed'
+        'editing_question', 'answers_str', 'survey_completed',
     ]
     for key in keys_to_delete:
         if key in context.user_data:
