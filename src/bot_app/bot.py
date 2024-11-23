@@ -65,15 +65,14 @@ async def start(update: Update, context: CallbackContext) -> None:
 
 def reset_application_data(context: CallbackContext) -> None:
     """Очищает данные текущей заявки из user_data."""
-    context.user_data.pop('answers', None)
-    context.user_data.pop('current_question', None)
-    context.user_data.pop('questions', None)
-    context.user_data.pop('started', None)
-    context.user_data.pop('awaiting_contact', None)
-    context.user_data.pop('awaiting_confirmation', None)
-    context.user_data.pop('editing_question', None)
-    context.user_data.pop('answers_str', None)
-    context.user_data.pop('survey_completed', None)
+    keys_to_delete = [
+        'answers', 'current_question', 'questions', 'started',
+        'awaiting_contact', 'awaiting_confirmation',
+        'editing_question', 'answers_str', 'survey_completed'
+    ]
+    for key in keys_to_delete:
+        if key in context.user_data:
+            del context.user_data[key]
 
 
 async def handle_start_button(
