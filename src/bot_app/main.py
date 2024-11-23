@@ -9,7 +9,7 @@ from bot import (
     handle_profile_edit_choice,
     handle_start_button,
     route_message_based_on_state,
-    start,
+    start, process_application,
 )
 from config import BOT_TOKEN
 from telegram import Update
@@ -38,6 +38,8 @@ def init_bot() -> TelegramApplication:
         MessageHandler(filters.Regex('^Мой профиль$'), handle_my_profile))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,
                                            route_message_based_on_state))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,
+                                         process_application))
     application.add_handler(
         CallbackQueryHandler(confirm_answers, pattern="confirm_answers"))
     application.add_handler(

@@ -7,7 +7,6 @@ SELECTED_FIELD: int = 1
 # Информационные сообщения
 WELCOME: str = 'Добро пожаловать! Выберите нужное действие:'
 HAVENT_QUESTIONS: str = 'Вопросы для опроса отсутствуют.'
-MESSAGE_NOT_FOUND: str = 'Произошла ошибка: сообщение не найдено.'
 DEFAULT_STATUS: str = 'открыта'
 SUCCESSFUL_SAVE: str = 'Заявка успешно сохранена!'
 ASK_FOR_CONTACTS: str = 'Пожалуйста, укажите контактные данные.\nВведите ваш номер телефона или email:'# noqa
@@ -25,3 +24,7 @@ PROFILE_UPDATED: str = 'Ваш профиль успешно обновлен.'
 BLOCK_MESSAGE: str = 'Вы заблокированы. Обратитесь к администратору. '
 USER_NOT_FOUND: str = 'Пользователь не найден.'
 NOT_SPECIFIED: str = 'Не задано'
+INVALID_EMAIL_FORMAT: str = "Неправильный формат email. Попробуйте снова."
+INVALID_PHONE_FORMAT: str = "Неправильный формат номера телефона. Попробуйте снова."# noqa
+UNKNOWN_FIELD_FOR_EDIT: str = "Неизвестное поле для редактирования."
+INVALID_CONTACT_FORMAT_MSG = "Неверный формат контактной информации. Попробуйте снова."# noqa
