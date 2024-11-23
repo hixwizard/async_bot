@@ -32,6 +32,7 @@ from constants import (
     WELCOME,
 )
 from database import get_async_db_session
+from logger import bot_logger
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
@@ -44,6 +45,8 @@ from telegram import (
 from telegram.ext import CallbackContext, ContextTypes
 
 from models import AdminUser, Application, ApplicationStatus, Question, User
+
+logger = bot_logger()
 
 
 async def get_questions() -> list[dict]:
@@ -306,7 +309,7 @@ async def handle_question_response(
 
 async def error_handler(update: Update, context: CallbackContext) -> None:
     """Обрабатывает ошибки, возникающие при обработке обновлений Telegram."""
-    logging.error(f"Обновление {update} вызвало исключение {context.error}")
+    logger.error(f"Обновление {update} вызвало исключение {context.error}")
 
 
 async def handle_my_applications(
@@ -591,5 +594,5 @@ async def generate_message_for_blocked_user() -> str:
         return BLOCK_MESSAGE
 
     except SQLAlchemyError as e:
-        logging.error(f'Ошибка при выполнении запроса к БД: {e}')
+        logger.error(f'Ошибка при выполнении запроса к БД: {e}')
         return BLOCK_MESSAGE
