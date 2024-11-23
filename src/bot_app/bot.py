@@ -1,35 +1,7 @@
 import re
 
 from buttons import start_keyboard
-from constants import (
-    ASK_FOR_CONTACTS,
-    BLOCK_MESSAGE,
-    CHOOSE_EDIT_OR_OK,
-    CHOOSE_EDIT_QUESTION,
-    CHOOSE_TO_EDIT,
-    DEFAULT_STATUS,
-    EMPTY,
-    FIRST_QUESTION,
-    HAVENT_ANSWERS,
-    HAVENT_APPLICATION,
-    HAVENT_QUESTIONS,
-    INVALID_CONTACT_FORMAT_MSG,
-    INVALID_EMAIL_FORMAT,
-    INVALID_PHONE_FORMAT,
-    NEXT_NUMBER,
-    NEXT_QUESTION,
-    NOTHING_TO_EDIT,
-    NOT_SPECIFIED,
-    PROFILE_UPDATED,
-    QUESTION_NOT_FOUND,
-    SELECTED_FIELD,
-    SUCCESSFUL_EDIT,
-    SUCCESSFUL_SAVE,
-    TAP_TO_CONTINIUE,
-    UNKNOWN_FIELD_FOR_EDIT,
-    USER_NOT_FOUND,
-    WELCOME,
-)
+from constants import bot_flow
 from database import get_async_db_session
 from logger import bot_logger
 from sqlalchemy.exc import SQLAlchemyError
@@ -86,7 +58,7 @@ async def start(update: Update, context: CallbackContext) -> None:
     await save_user_to_db(user_id, first_name, username, context)
     reply_markup = start_keyboard()
     await update.message.reply_text(
-        WELCOME,
+        bot_flow.WELCOME,
         reply_markup=reply_markup,
     )
 
@@ -120,12 +92,14 @@ async def handle_start_button(
     questions = await get_questions()
     if questions:
         context.user_data['answers'] = []
-        context.user_data['current_question'] = FIRST_QUESTION
+        context.user_data['current_question'] = bot_flow.FIRST_QUESTION
         context.user_data['questions'] = questions
         context.user_data['started'] = True
-        await update.message.reply_text(questions[FIRST_QUESTION]['question'])
+        await update.message.reply_text(
+            questions[bot_flow.FIRST_QUESTION]['question'],
+        )
     else:
-        await update.message.reply_text(HAVENT_QUESTIONS)
+        await update.message.reply_text(bot_flow.HAVENT_QUESTIONS)
 
 
 async def process_application(update: Update,
@@ -135,7 +109,7 @@ async def process_application(update: Update,
         context.user_data['answers'] = []
 
     context.user_data['answers'].append(update.message.text)
-    context.user_data['current_question'] += NEXT_QUESTION
+    context.user_data['current_question'] += bot_flow.NEXT_QUESTION
     await ask_next_question(update, context)
 
 
@@ -147,10 +121,10 @@ async def save_application_to_db(query: CallbackQuery,
 
     async with get_async_db_session() as session:
         result = await session.execute(
-            select(ApplicationStatus).filter_by(status=DEFAULT_STATUS),
+            select(ApplicationStatus).filter_by(status=bot_flow.DEFAULT_STATUS),
         )
         status = result.scalars().first() or ApplicationStatus(
-            status=DEFAULT_STATUS)
+            status=bot_flow.DEFAULT_STATUS)
         if not status.id:
             session.add(status)
             await session.commit()
@@ -163,7 +137,7 @@ async def save_application_to_db(query: CallbackQuery,
         session.add(application)
         await session.commit()
 
-    await query.message.reply_text(SUCCESSFUL_SAVE)
+    await query.message.reply_text(bot_flow.SUCCESSFUL_SAVE)
 
 
 async def handle_contact_info(
@@ -191,7 +165,9 @@ async def handle_contact_info(
                 case phone if is_valid_phone(phone):
                     user_record.phone = phone
                 case _:
-                    await update.message.reply_text(INVALID_CONTACT_FORMAT_MSG)
+                    await update.message.reply_text(
+                        bot_flow.INVALID_CONTACT_FORMAT_MSG,
+                    )
                     return
 
             await session.commit()
@@ -209,10 +185,10 @@ async def finalize_application(
 
     async with get_async_db_session() as session:
         result = await session.execute(
-            select(ApplicationStatus).filter_by(status=DEFAULT_STATUS),
+            select(ApplicationStatus).filter_by(status=bot_flow.DEFAULT_STATUS),
         )
         status = result.scalars().first() or ApplicationStatus(
-            status=DEFAULT_STATUS)
+            status=bot_flow.DEFAULT_STATUS)
         if not status.id:
             session.add(status)
             await session.commit()
@@ -221,7 +197,7 @@ async def finalize_application(
             select(Application).filter_by(user_id=user_id),
         )
         total_applications = result.scalars().all()
-        application_number = len(total_applications) + NEXT_QUESTION
+        application_number = len(total_applications) + bot_flow.NEXT_QUESTION
 
         application = Application(
             user_id=user_id,
@@ -232,7 +208,7 @@ async def finalize_application(
         await session.commit()
 
     await update.effective_chat.send_message(
-        f"{SUCCESSFUL_SAVE} Номер вашей заявки: {application_number}",
+        f"{bot_flow.SUCCESSFUL_SAVE} Номер вашей заявки: {application_number}",
     )
     context.user_data['survey_completed'] = True
     context.user_data['awaiting_contact'] = False
@@ -255,7 +231,9 @@ async def ask_for_contact_info(
             case _ if user_record.email or user_record.phone:
                 await finalize_application(update, context)
             case _:
-                await update.effective_chat.send_message(ASK_FOR_CONTACTS)
+                await update.effective_chat.send_message(
+                    bot_flow.ASK_FOR_CONTACTS,
+                )
                 context.user_data['awaiting_contact'] = True
 
 
@@ -274,17 +252,19 @@ async def handle_question_response(
 
     match context.user_data:
         case data if data.get('awaiting_edit_selection', False):
-            await update.message.reply_text(CHOOSE_EDIT_QUESTION)
+            await update.message.reply_text(bot_flow.CHOOSE_EDIT_QUESTION)
             return
 
         case data if data.get('awaiting_confirmation', False):
-            await update.message.reply_text(CHOOSE_EDIT_OR_OK)
+            await update.message.reply_text(bot_flow.CHOOSE_EDIT_OR_OK)
             return
 
         case data if 'editing_question' in data:
             question_number = context.user_data.pop('editing_question')
             answers = context.user_data.get('answers', [])
-            answers[question_number - NEXT_NUMBER] = update.message.text
+            answers[
+                question_number - bot_flow.NEXT_NUMBER
+            ] = update.message.text
             context.user_data['answers'] = answers
             await summarize_answers(update, context)
             return
@@ -303,7 +283,7 @@ async def handle_question_response(
             return
 
         case _:
-            await update.message.reply_text(TAP_TO_CONTINIUE)
+            await update.message.reply_text(bot_flow.TAP_TO_CONTINIUE)
 
 
 async def error_handler(update: Update, context: CallbackContext) -> None:
@@ -331,10 +311,12 @@ async def handle_my_applications(
 
     match applications:
         case []:
-            await update.message.reply_text(HAVENT_APPLICATION)
+            await update.message.reply_text(bot_flow.HAVENT_APPLICATION)
         case _:
             applications_text = "Ваши заявки:\n"
-            for index, app in enumerate(applications, start=NEXT_QUESTION):
+            for index, app in enumerate(
+                applications, start=bot_flow.NEXT_QUESTION,
+            ):
                 applications_text += (f"Номер: {index}\n"
                                       f"Статус: {app.status.status}\n\n")
             await update.message.reply_text(applications_text)
@@ -346,12 +328,12 @@ async def summarize_answers(update: Update, context: CallbackContext) -> None:
     answers = context.user_data.get('answers', [])
 
     if not questions or not answers:
-        await update.message.reply_text(HAVENT_ANSWERS)
+        await update.message.reply_text(bot_flow.HAVENT_ANSWERS)
         return
 
     summary_text = "Проверьте свои ответы:\n\n"
     for idx, question in enumerate(questions):
-        answer = answers[idx] if idx < len(answers) else EMPTY
+        answer = answers[idx] if idx < len(answers) else bot_flow.EMPTY
         summary_text += (f"{question['number']}. {question['question']}\n"
                          f"Ответ: {answer}\n\n")
 
@@ -371,7 +353,7 @@ async def confirm_answers(update: Update, context: CallbackContext) -> None:
     """Подтверждает ответы, запрашивает контактные данные."""
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text(SUCCESSFUL_EDIT)
+    await query.edit_message_text(bot_flow.SUCCESSFUL_EDIT)
 
     questions = context.user_data.get('questions', [])
     answers = context.user_data.get('answers', [])
@@ -396,7 +378,7 @@ async def edit_answers(update: Update, context: CallbackContext) -> None:
 
     questions = context.user_data.get('questions', [])
     if not questions:
-        await query.edit_message_text(NOTHING_TO_EDIT)
+        await query.edit_message_text(bot_flow.NOTHING_TO_EDIT)
         return
 
     buttons = [
@@ -406,14 +388,14 @@ async def edit_answers(update: Update, context: CallbackContext) -> None:
     ]
     reply_markup = InlineKeyboardMarkup(buttons)
 
-    await query.edit_message_text(CHOOSE_EDIT_QUESTION,
+    await query.edit_message_text(bot_flow.CHOOSE_EDIT_QUESTION,
                                   reply_markup=reply_markup)
 
 
 async def ask_next_question(update: Update, context: CallbackContext) -> None:
     """Выдаёт следующий вопрос из списка или показывает сводку."""
     current_question_index = context.user_data.get(
-        'current_question', FIRST_QUESTION,
+        'current_question', bot_flow.FIRST_QUESTION,
     )
     questions = context.user_data.get('questions', [])
 
@@ -431,7 +413,7 @@ async def handle_edit_choice(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     await query.answer()
 
-    question_number = int(query.data.split('_')[SELECTED_FIELD])
+    question_number = int(query.data.split('_')[bot_flow.SELECTED_FIELD])
     questions = context.user_data.get('questions', [])
     question = next((q for q in questions if q['number'] ==
                      question_number), None)
@@ -442,7 +424,7 @@ async def handle_edit_choice(update: Update, context: CallbackContext) -> None:
         await query.edit_message_text(f"Редактируйте ответ на вопрос: "
                                       f"{question['question']}")
     else:
-        await query.edit_message_text(QUESTION_NOT_FOUND)
+        await query.edit_message_text(bot_flow.QUESTION_NOT_FOUND)
 
 
 async def check_user_blocked(user_id: str, context: CallbackContext) -> bool:
@@ -466,13 +448,13 @@ async def handle_my_profile(update: Update, context: CallbackContext) -> None:
         user = result.scalars().first()
 
         if not user:
-            await update.message.reply_text(USER_NOT_FOUND)
+            await update.message.reply_text(bot_flow.USER_NOT_FOUND)
             return
 
         profile_text = (f"Ваш профиль:\n\n"
                         f"Имя: {user.name}\n"
-                        f"Email: {user.email or NOT_SPECIFIED}\n"
-                        f"Телефон: {user.phone or NOT_SPECIFIED}\n\n")
+                        f"Email: {user.email or bot_flow.NOT_SPECIFIED}\n"
+                        f"Телефон: {user.phone or bot_flow.NOT_SPECIFIED}\n\n")
 
         reply_markup = InlineKeyboardMarkup([
             [InlineKeyboardButton("✏️ Редактировать",
@@ -495,7 +477,7 @@ async def handle_edit_profile(update: Update,
         [InlineKeyboardButton("Телефон", callback_data="edit_phone")],
     ])
 
-    await query.edit_message_text(CHOOSE_TO_EDIT,
+    await query.edit_message_text(bot_flow.CHOOSE_TO_EDIT,
                                   reply_markup=reply_markup)
 
 
@@ -504,7 +486,7 @@ async def handle_profile_edit_choice(
     """Обрабатывает выбор редактирования профиля."""
     query = update.callback_query
     await query.answer()
-    edit_choice = query.data.split('_')[SELECTED_FIELD]
+    edit_choice = query.data.split('_')[bot_flow.SELECTED_FIELD]
     context.user_data['edit_choice'] = edit_choice
 
     match edit_choice:
@@ -531,7 +513,7 @@ async def handle_profile_update(
         user = result.scalars().first()
 
         if not user:
-            await update.message.reply_text(USER_NOT_FOUND)
+            await update.message.reply_text(bot_flow.USER_NOT_FOUND)
             return
 
         match edit_choice:
@@ -539,21 +521,27 @@ async def handle_profile_update(
                 user.name = new_value
             case 'email':
                 if not is_valid_email(new_value):
-                    await update.message.reply_text(INVALID_EMAIL_FORMAT)
+                    await update.message.reply_text(
+                        bot_flow.INVALID_EMAIL_FORMAT,
+                    )
                     return
                 user.email = new_value
             case 'phone':
                 if not is_valid_phone(new_value):
-                    await update.message.reply_text(INVALID_PHONE_FORMAT)
+                    await update.message.reply_text(
+                        bot_flow.INVALID_PHONE_FORMAT,
+                    )
                     return
                 user.phone = new_value
             case _:
-                await update.message.reply_text(UNKNOWN_FIELD_FOR_EDIT)
+                await update.message.reply_text(
+                    bot_flow.UNKNOWN_FIELD_FOR_EDIT,
+                )
                 return
 
         await session.commit()
 
-    await update.message.reply_text(PROFILE_UPDATED)
+    await update.message.reply_text(bot_flow.PROFILE_UPDATED)
     context.user_data.pop('edit_choice', None)
 
 
@@ -589,9 +577,9 @@ async def generate_message_for_blocked_user() -> str:
             )
             admin_email = result.scalars().first()
         if admin_email:
-            return (f'{BLOCK_MESSAGE} {admin_email}')
-        return BLOCK_MESSAGE
+            return (f'{bot_flow.BLOCK_MESSAGE} {admin_email}')
+        return bot_flow.BLOCK_MESSAGE
 
     except SQLAlchemyError as e:
         logger.error(f'Ошибка при выполнении запроса к БД: {e}')
-        return BLOCK_MESSAGE
+        return bot_flow.BLOCK_MESSAGE
