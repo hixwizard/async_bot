@@ -8,8 +8,9 @@ from bot import (
     handle_my_profile,
     handle_profile_edit_choice,
     handle_start_button,
+    process_application,
     route_message_based_on_state,
-    start, process_application,
+    start,
 )
 from config import BOT_TOKEN
 from telegram import Update

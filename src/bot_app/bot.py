@@ -1,4 +1,5 @@
 import logging
+import re
 
 from buttons import start_keyboard
 from constants import (
@@ -13,6 +14,9 @@ from constants import (
     HAVENT_ANSWERS,
     HAVENT_APPLICATION,
     HAVENT_QUESTIONS,
+    INVALID_CONTACT_FORMAT_MSG,
+    INVALID_EMAIL_FORMAT,
+    INVALID_PHONE_FORMAT,
     NEXT_NUMBER,
     NEXT_QUESTION,
     NOTHING_TO_EDIT,
@@ -23,9 +27,9 @@ from constants import (
     SUCCESSFUL_EDIT,
     SUCCESSFUL_SAVE,
     TAP_TO_CONTINIUE,
+    UNKNOWN_FIELD_FOR_EDIT,
     USER_NOT_FOUND,
-    WELCOME, INVALID_EMAIL_FORMAT, INVALID_PHONE_FORMAT,
-    UNKNOWN_FIELD_FOR_EDIT, INVALID_CONTACT_FORMAT_MSG,
+    WELCOME,
 )
 from database import get_async_db_session
 from sqlalchemy.exc import SQLAlchemyError
@@ -38,7 +42,6 @@ from telegram import (
     Update,
 )
 from telegram.ext import CallbackContext, ContextTypes
-import re
 
 from models import AdminUser, Application, ApplicationStatus, Question, User
 
@@ -161,7 +164,8 @@ async def save_application_to_db(query: CallbackQuery,
     await query.message.reply_text(SUCCESSFUL_SAVE)
 
 
-async def handle_contact_info(update: Update, context: CallbackContext) -> None:
+async def handle_contact_info(
+        update: Update, context: CallbackContext) -> None:
     """Обработка контактной информации пользователя и завершение заявки."""
     user_id = str(update.message.from_user.id)
     if await check_user_blocked(user_id, context):
@@ -298,7 +302,6 @@ async def handle_question_response(
 
         case _:
             await update.message.reply_text(TAP_TO_CONTINIUE)
-
 
 
 async def error_handler(update: Update, context: CallbackContext) -> None:
@@ -553,9 +556,12 @@ async def handle_profile_update(
 
 
 def is_valid_email(email: str) -> bool:
+    """Проверяет, является ли строка email действительным адресом эл. почты."""
     return re.match(r"[^@]+@[^@]+\.[^@]+", email) is not None
 
+
 def is_valid_phone(phone: str) -> bool:
+    """Проверяет, является ли строка телеф. номером в допустимом формате."""
     return re.match(r"^\+?\d{10,15}$", phone) is not None
 
 
