@@ -40,7 +40,7 @@ def init_bot() -> TelegramApplication:
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,
                                            route_message_based_on_state))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND,
-                                         process_application))
+                                           process_application))
     application.add_handler(
         CallbackQueryHandler(confirm_answers, pattern="confirm_answers"))
     application.add_handler(
