@@ -1,3 +1,4 @@
+import asyncio
 import re
 
 from buttons import start_keyboard
@@ -34,20 +35,31 @@ async def save_user_to_db(
         user_id: str, first_name: str, username: str,
         context: CallbackContext) -> None:
     """Сохранение пользователя в базу данных, если его еще нет."""
-    async with get_async_db_session() as session:
-        result = await session.execute(select(User).filter_by(id=user_id))
-        user = result.scalars().first()
+    try:
+        async with get_async_db_session() as session:
+            result = await session.execute(select(User).filter_by(id=user_id))
+            user = result.scalars().first()
 
-        if not user:
-            new_user = User(
-                id=user_id, name=first_name, email=None,
-                phone=None, is_blocked=False,
-            )
-            session.add(new_user)
-            await session.commit()
-            user = new_user
+            if not user:
+                new_user = User(
+                    id=user_id, name=first_name, email=None,
+                    phone=None, is_blocked=False,
+                )
+                session.add(new_user)
+                await session.commit()
+                user = new_user
 
-        context.user_data['is_blocked'] = user.is_blocked
+            context.user_data['is_blocked'] = user.is_blocked
+
+    except SQLAlchemyError as e:
+        logger.error(f"Ошибка при сохранении пользователя в базу данных: {e}")
+        raise
+    except ValueError as e:
+        logger.error(f"Некорректные данные при сохранении пользователя: {e}")
+        raise
+    except asyncio.TimeoutError as e:
+        logger.error(f"Превышено время ожидания: {e}")
+        raise
 
 
 async def start(update: Update, context: CallbackContext) -> None:
@@ -117,26 +129,39 @@ async def save_application_to_db(query: CallbackQuery,
                                  answers: str) -> None:
     """Финальное сохранение заявки в базе данных."""
     user_id = str(query.from_user.id)
+    try:
+        async with get_async_db_session() as session:
+            result = await session.execute(
+                select(ApplicationStatus).filter_by(status=bot_flow.DEFAULT_STATUS),
+            )
+            status = result.scalars().first() or ApplicationStatus(
+                status=bot_flow.DEFAULT_STATUS)
+            if not status.id:
+                session.add(status)
+                await session.commit()
 
-    async with get_async_db_session() as session:
-        result = await session.execute(
-            select(ApplicationStatus).filter_by(status=bot_flow.DEFAULT_STATUS),
-        )
-        status = result.scalars().first() or ApplicationStatus(
-            status=bot_flow.DEFAULT_STATUS)
-        if not status.id:
-            session.add(status)
+            application = Application(
+                user_id=user_id,
+                status_id=status.id,
+                answers=answers,
+            )
+            session.add(application)
             await session.commit()
 
-        application = Application(
-            user_id=user_id,
-            status_id=status.id,
-            answers=answers,
-        )
-        session.add(application)
-        await session.commit()
+        await query.message.reply_text(bot_flow.SUCCESSFUL_SAVE)
 
-    await query.message.reply_text(bot_flow.SUCCESSFUL_SAVE)
+    except SQLAlchemyError as e:
+        logger.error(f"Ошибка при сохранении заявки в базу данных: {e}")
+        raise
+    except ValueError as e:
+        logger.error(f"Некорректные данные при сохранении заявки: {e}")
+        raise
+    except asyncio.TimeoutError as e:
+        logger.error(f"Таймаут при сохранении заявки: {e}")
+        raise
+    except AttributeError as e:
+        logger.error(f"Ошибка доступа к атрибуту при сохранении заявки: {e}")
+        raise
 
 
 async def handle_contact_info(
@@ -181,36 +206,51 @@ async def finalize_application(
     """Сохраняет заявку после получения контактной информации."""
     user_id = str(update.effective_user.id)
     answers_str = context.user_data.get('answers_str', '')
+    try:
+        async with get_async_db_session() as session:
+            result = await session.execute(
+                select(ApplicationStatus).filter_by(status=bot_flow.DEFAULT_STATUS),
+            )
+            status = result.scalars().first() or ApplicationStatus(
+                status=bot_flow.DEFAULT_STATUS)
+            if not status.id:
+                session.add(status)
+                await session.commit()
 
-    async with get_async_db_session() as session:
-        result = await session.execute(
-            select(ApplicationStatus).filter_by(status=bot_flow.DEFAULT_STATUS),
-        )
-        status = result.scalars().first() or ApplicationStatus(
-            status=bot_flow.DEFAULT_STATUS)
-        if not status.id:
-            session.add(status)
+            result = await session.execute(
+                select(Application).filter_by(user_id=user_id),
+            )
+            total_applications = result.scalars().all()
+            application_number = len(
+                total_applications) + bot_flow.NEXT_QUESTION
+
+            application = Application(
+                user_id=user_id,
+                status_id=status.id,
+                answers=answers_str,
+            )
+            session.add(application)
             await session.commit()
 
-        result = await session.execute(
-            select(Application).filter_by(user_id=user_id),
+        await update.effective_chat.send_message(
+            f"{bot_flow.SUCCESSFUL_SAVE} Номер вашей заявки: {
+                application_number}",
         )
-        total_applications = result.scalars().all()
-        application_number = len(total_applications) + bot_flow.NEXT_QUESTION
+        context.user_data['survey_completed'] = True
+        context.user_data['awaiting_contact'] = False
 
-        application = Application(
-            user_id=user_id,
-            status_id=status.id,
-            answers=answers_str,
-        )
-        session.add(application)
-        await session.commit()
-
-    await update.effective_chat.send_message(
-        f"{bot_flow.SUCCESSFUL_SAVE} Номер вашей заявки: {application_number}",
-    )
-    context.user_data['survey_completed'] = True
-    context.user_data['awaiting_contact'] = False
+    except SQLAlchemyError as e:
+        logger.error(f"Ошибка при сохранении заявки в базу данных: {e}")
+        raise
+    except ValueError as e:
+        logger.error(f"Некорректные данные при сохранении заявки: {e}")
+        raise
+    except asyncio.TimeoutError as e:
+        logger.error(f"Таймаут при сохранении заявки: {e}")
+        raise
+    except AttributeError as e:
+        logger.error(f"Ошибка доступа к атрибуту при сохранении заявки: {e}")
+        raise
 
 
 async def ask_for_contact_info(
